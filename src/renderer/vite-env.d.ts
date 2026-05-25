@@ -2,8 +2,7 @@
 
 interface Window {
   windowControls?: {
-    minimize: () => void;
-    toggleMaximize: () => void;
-    close: () => void;
+    minimize: () => Promise<void>;
+    close: () => Promise<void>;
   };
 }

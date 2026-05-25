@@ -1,6 +1,9 @@
-import { CircleHelp, Minus, Settings, Square, X } from 'lucide-react';
+import { CircleHelp, Minus, Settings, X } from 'lucide-react';
+import type { CSSProperties } from 'react';
 
 export function TitleBar() {
+  const noDragStyle = { WebkitAppRegion: 'no-drag' } as CSSProperties;
+
   return (
     <header className="drag-region flex h-14 shrink-0 items-center justify-between border-b border-white/[0.08] bg-shell-950/80 px-7 backdrop-blur-xl">
       <div className="flex items-center gap-3">
@@ -26,25 +29,30 @@ export function TitleBar() {
           <CircleHelp size={18} />
           Help
         </button>
-        <div className="ml-4 flex items-center gap-2 text-mist-400">
+        <div className="ml-4 flex items-center gap-1 text-mist-400">
           <button
             aria-label="Minimize window"
-            className="rounded-md p-2 transition hover:bg-white/7 hover:text-white"
-            onClick={() => window.windowControls?.minimize()}
+            className="no-drag rounded-md p-2 transition hover:bg-white/7 hover:text-white"
+            onClick={() => {
+              void window.windowControls?.minimize();
+            }}
+            onMouseDown={(event) => event.stopPropagation()}
+            onPointerDown={(event) => event.stopPropagation()}
+            style={noDragStyle}
+            type="button"
           >
             <Minus size={18} />
           </button>
           <button
-            aria-label="Maximize window"
-            className="rounded-md p-2 transition hover:bg-white/7 hover:text-white"
-            onClick={() => window.windowControls?.toggleMaximize()}
-          >
-            <Square size={15} />
-          </button>
-          <button
             aria-label="Close window"
-            className="rounded-md p-2 transition hover:bg-red-500/20 hover:text-red-100"
-            onClick={() => window.windowControls?.close()}
+            className="no-drag rounded-md p-2 transition hover:bg-red-500/20 hover:text-red-100"
+            onClick={() => {
+              void window.windowControls?.close();
+            }}
+            onMouseDown={(event) => event.stopPropagation()}
+            onPointerDown={(event) => event.stopPropagation()}
+            style={noDragStyle}
+            type="button"
           >
             <X size={19} />
           </button>

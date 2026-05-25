@@ -1,14 +1,21 @@
 import { History, Home, ListMusic, RefreshCw, Settings, TimerReset } from 'lucide-react';
+import type { AppPage } from '@shared/navigation';
 
 const navItems = [
-  { label: 'Home', icon: Home, selected: true },
-  { label: 'Playlists', icon: ListMusic },
-  { label: 'Queue', icon: TimerReset },
-  { label: 'History', icon: History },
-  { label: 'Settings', icon: Settings },
-];
+  { label: 'Home', icon: Home, page: 'home' },
+  { label: 'Playlists', icon: ListMusic, page: 'playlists' },
+  { label: 'Queue', icon: TimerReset, page: 'queue' },
+  { label: 'History', icon: History, page: 'history' },
+  { label: 'Settings', icon: Settings, page: 'settings' },
+] satisfies Array<{ label: string; icon: typeof Home; page: AppPage }>;
 
-export function Sidebar() {
+export function Sidebar({
+  activePage,
+  onNavigate,
+}: {
+  activePage: AppPage;
+  onNavigate: (page: AppPage) => void;
+}) {
   return (
     <aside className="flex w-[314px] shrink-0 flex-col border-r border-white/[0.08] bg-shell-950/55 px-4 py-5 backdrop-blur-2xl">
       <section className="panel flex items-center gap-4 rounded-lg p-4">
@@ -28,16 +35,24 @@ export function Sidebar() {
       <nav className="mt-7 space-y-3">
         {navItems.map((item) => {
           const Icon = item.icon;
+          const selected = activePage === item.page;
           return (
             <button
               key={item.label}
-              className={`flex w-full items-center gap-5 rounded-lg px-5 py-3.5 text-left text-[16px] transition ${
-                item.selected
-                  ? 'bg-gradient-to-r from-blue-500/25 to-blue-500/8 text-white shadow-[inset_3px_0_0_rgba(96,165,250,1)]'
+              onClick={() => onNavigate(item.page)}
+              className={`relative isolate flex w-full items-center gap-5 overflow-hidden rounded-lg px-5 py-3.5 text-left text-[16px] transition focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-blue-300/40 ${
+                selected
+                  ? 'bg-gradient-to-r from-blue-500/25 via-blue-500/14 to-blue-500/5 text-white'
                   : 'text-mist-400 hover:bg-white/6 hover:text-mist-50'
               }`}
             >
-              <Icon size={24} className={item.selected ? 'text-blue-300' : 'text-mist-400'} />
+              {selected && (
+                <>
+                  <span className="absolute left-0 top-2 h-[calc(100%-1rem)] w-[4px] rounded-r-full bg-blue-400" />
+                  <span className="pointer-events-none absolute inset-y-0 left-0 -z-10 w-24 bg-gradient-to-r from-blue-400/10 to-transparent" />
+                </>
+              )}
+              <Icon size={24} className={selected ? 'text-blue-300' : 'text-mist-400'} />
               {item.label}
             </button>
           );

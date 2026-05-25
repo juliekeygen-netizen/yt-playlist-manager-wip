@@ -1,7 +1,7 @@
 import type { QuickAction } from '@shared/mockData';
 import { buttonAccent, cardAccent, iconAccent } from './accent';
 
-export function QuickActionCard({ action }: { action: QuickAction }) {
+export function QuickActionCard({ action, onClick }: { action: QuickAction; onClick?: () => void }) {
   const Icon = action.icon;
 
   return (
@@ -16,6 +16,7 @@ export function QuickActionCard({ action }: { action: QuickAction }) {
         <p className="mt-1.5 max-w-[18rem] text-[15px] leading-6 text-mist-400">{action.description}</p>
         <button
           className={`mt-auto w-full max-w-[194px] rounded-md bg-gradient-to-r px-5 py-2.5 text-sm font-semibold text-white shadow-lg transition ${buttonAccent[action.accent]}`}
+          onClick={onClick}
         >
           {action.buttonLabel}
         </button>

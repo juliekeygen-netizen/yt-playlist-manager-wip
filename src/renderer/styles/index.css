@@ -15,6 +15,13 @@
 
 * {
   box-sizing: border-box;
+  user-select: none;
+}
+
+input,
+textarea,
+[contenteditable="true"] {
+  user-select: text;
 }
 
 html,
@@ -35,6 +42,7 @@ body {
 
 button {
   font: inherit;
+  user-select: none;
 }
 
 .drag-region {
@@ -45,16 +53,52 @@ button {
   -webkit-app-region: no-drag;
 }
 
+.drag-region button,
+.drag-region .no-drag {
+  -webkit-app-region: no-drag;
+}
+
+.clamp-2 {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+
 .main-scroll {
   scrollbar-width: thin;
   scrollbar-color: rgba(148, 163, 184, 0.22) transparent;
+}
+
+.playlist-list-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(100, 116, 139, 0.2) transparent;
+}
+
+.video-table-scroll {
+  scrollbar-width: none;
+  overflow-x: hidden;
 }
 
 .main-scroll::-webkit-scrollbar {
   width: 9px;
 }
 
+.playlist-list-scroll::-webkit-scrollbar {
+  width: 7px;
+}
+
+.video-table-scroll::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
 .main-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.playlist-list-scroll::-webkit-scrollbar-track {
   background: transparent;
 }
 
@@ -65,8 +109,20 @@ button {
   background-clip: content-box;
 }
 
+.playlist-list-scroll::-webkit-scrollbar-thumb {
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background: rgba(100, 116, 139, 0.2);
+  background-clip: content-box;
+}
+
 .main-scroll::-webkit-scrollbar-thumb:hover {
   background: rgba(148, 163, 184, 0.34);
+  background-clip: content-box;
+}
+
+.playlist-list-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(100, 116, 139, 0.32);
   background-clip: content-box;
 }
 

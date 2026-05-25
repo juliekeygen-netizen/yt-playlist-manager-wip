@@ -47,19 +47,12 @@ app.on('window-all-closed', () => {
   }
 });
 
-ipcMain.on('window:minimize', () => {
-  mainWindow?.minimize();
+ipcMain.handle('window:minimize', (event) => {
+  const window = BrowserWindow.fromWebContents(event.sender) ?? mainWindow;
+  window?.minimize();
 });
 
-ipcMain.on('window:toggle-maximize', () => {
-  if (!mainWindow) return;
-  if (mainWindow.isMaximized()) {
-    mainWindow.unmaximize();
-  } else {
-    mainWindow.maximize();
-  }
-});
-
-ipcMain.on('window:close', () => {
-  mainWindow?.close();
+ipcMain.handle('window:close', (event) => {
+  const window = BrowserWindow.fromWebContents(event.sender) ?? mainWindow;
+  window?.close();
 });

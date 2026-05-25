@@ -4,3 +4,26 @@ dist
 .vite
 *.log
 *.local
+
+# AI / coding assistant local files
+.codex/
+.codex*
+*.codex
+codex/
+codex-*
+*codex*
+.cursor/
+.cursor*
+.windsurf/
+.claude/
+.claude*
+.aider*
+aider.chat.history.md
+aider.input.history
+.aider.tags.cache.v4/
+
+# ChatGPT/Codex temporary notes or diffs
+*codex-diff*
+*codex_diff*
+*ai-notes*
+*ai_notes*
