@@ -679,6 +679,11 @@ export function PlaylistsPage() {
           ]}
           onClose={() => setDialog(null)}
           onInputChange={(value) => setDialog({ ...dialog, value })}
+          onSubmit={() => {
+            if (dialog.value.trim().length > 0) {
+              renamePlaylist(dialog.playlistId, dialog.value);
+            }
+          }}
         />
       );
     }
@@ -701,6 +706,11 @@ export function PlaylistsPage() {
           ]}
           onClose={() => setDialog(null)}
           onInputChange={(value) => setDialog({ ...dialog, value })}
+          onSubmit={() => {
+            if (dialog.value.trim().length > 0) {
+              duplicatePlaylist(dialog.playlistId, dialog.value);
+            }
+          }}
         />
       );
     }

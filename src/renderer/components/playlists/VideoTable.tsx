@@ -105,7 +105,7 @@ export function VideoTable({
       data-active-list-scope="videoTable"
       onPointerDownCapture={onActivate}
     >
-      <div className={`grid shrink-0 ${tableGrid} items-center border-b border-white/[0.055] px-3 py-3 text-sm font-medium text-mist-300`}>
+      <div className={`grid shrink-0 ${tableGrid} items-center border-b border-white/[0.055] px-4 py-3 text-sm font-medium text-mist-300`}>
         <span />
         <input
           ref={checkboxRef}
@@ -256,7 +256,7 @@ function VideoRow({
 }) {
   return (
     <div
-      className={`grid min-h-[62px] ${tableGrid} items-center border-b border-white/[0.045] px-3 py-2.5 text-sm ${
+      className={`grid min-h-[62px] ${tableGrid} items-center border-b border-white/[0.045] px-4 py-2.5 text-sm ${
         selected ? 'bg-blue-500/[0.055]' : 'hover:bg-white/[0.025]'
       } ${dragging ? 'opacity-55' : ''} ${dragOver ? 'bg-blue-400/[0.09] shadow-[inset_0_2px_0_rgba(96,165,250,0.75)]' : ''}`}
       onClick={(event) => onSelect(video.id, getSelectionModifiers(event), visibleVideoIds)}

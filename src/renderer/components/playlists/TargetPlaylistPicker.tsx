@@ -156,7 +156,7 @@ export function TargetPlaylistPicker({
         </button>
       </section>
 
-      <div className={`mt-4 grid shrink-0 ${tableGrid} items-center border-y border-white/[0.055] px-6 py-3 text-sm font-medium text-mist-300`}>
+      <div className={`mt-4 grid shrink-0 ${tableGrid} items-center border-y border-white/[0.055] pl-6 pr-4 py-3 text-sm font-medium text-mist-300`}>
         <span />
         <span />
         <span>Playlist</span>
@@ -176,7 +176,7 @@ export function TargetPlaylistPicker({
                 key={playlist.id}
                 role="button"
                 tabIndex={disabled ? -1 : 0}
-                className={`grid min-h-[62px] w-full ${tableGrid} items-center border-b border-white/[0.045] px-6 py-2.5 text-left text-sm transition ${
+                className={`grid min-h-[62px] w-full ${tableGrid} items-center border-b border-white/[0.045] pl-6 pr-4 py-2.5 text-left text-sm transition ${
                   disabled ? 'cursor-not-allowed opacity-45' : 'hover:bg-white/[0.03]'
                 } ${selectedTargetIds.includes(playlist.id) ? 'bg-blue-500/[0.08]' : ''}`}
                 title={title}

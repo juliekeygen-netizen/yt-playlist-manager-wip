@@ -19,6 +19,7 @@ export function AppDialog({
   actions,
   onInputChange,
   onClose,
+  onSubmit,
 }: {
   title: string;
   description?: string;
@@ -28,6 +29,7 @@ export function AppDialog({
   actions: DialogAction[];
   onInputChange?: (value: string) => void;
   onClose: () => void;
+  onSubmit?: () => void;
 }) {
   useEffect(() => {
     function closeOnEscape(event: KeyboardEvent) {
@@ -42,7 +44,13 @@ export function AppDialog({
 
   return (
     <div className="fixed inset-0 z-[70] flex items-center justify-center bg-shell-950/35 px-5 backdrop-blur-sm">
-      <section className="w-full max-w-[440px] rounded-xl border border-white/[0.10] bg-shell-900/94 p-5 shadow-glow backdrop-blur-xl">
+      <form
+        className="w-full max-w-[440px] rounded-xl border border-white/[0.10] bg-shell-900/94 p-5 shadow-glow backdrop-blur-xl"
+        onSubmit={(event) => {
+          event.preventDefault();
+          onSubmit?.();
+        }}
+      >
         <div className="flex items-start gap-4">
           <div className="min-w-0 flex-1">
             <h2 className="text-lg font-semibold text-mist-50">{title}</h2>
@@ -84,7 +92,7 @@ export function AppDialog({
             </button>
           ))}
         </div>
-      </section>
+      </form>
     </div>
   );
 }
