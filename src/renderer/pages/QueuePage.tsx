@@ -25,6 +25,7 @@ type QueueDialog =
 
 const runnableStatuses: QueueStatus[] = ['Pending', 'Needs review', 'Failed'];
 const cancellableStatuses: QueueStatus[] = ['Pending', 'Needs review', 'Running'];
+const clearableStatuses: QueueStatus[] = ['Completed', 'Cancelled', 'Failed'];
 const statusSortOrder: QueueStatus[] = [
   'Pending',
   'Needs review',
@@ -350,18 +351,14 @@ export function QueuePage() {
     const anyRunnable = effectiveOperations.some((item) => runnableStatuses.includes(item.status));
     const anyCancellable = effectiveOperations.some((item) => cancellableStatuses.includes(item.status));
     const anyFailed = effectiveOperations.some((item) => item.status === 'Failed');
+    const clearableIds = effectiveOperations
+      .filter((item) => clearableStatuses.includes(item.status))
+      .map((item) => item.id);
 
     setContextMenu({
       x,
       y,
       items: [
-        {
-          label: 'Preview',
-          onSelect: () => {
-            setDetailOperationId(operationId);
-            setSelectedAffectedIds([]);
-          },
-        },
         {
           label: 'Apply operation',
           disabled: !anyRunnable,
@@ -379,9 +376,10 @@ export function QueuePage() {
           onSelect: () => retryOperations(effectiveIds),
         },
         {
-          label: 'Remove from queue',
+          label: 'Clear from queue',
+          disabled: clearableIds.length === 0,
           destructive: true,
-          onSelect: () => setDialog({ type: 'removeOperations', operationIds: effectiveIds }),
+          onSelect: () => setDialog({ type: 'removeOperations', operationIds: clearableIds }),
         },
       ],
     });
@@ -400,10 +398,6 @@ export function QueuePage() {
       x,
       y,
       items: [
-        {
-          label: 'Preview video',
-          onSelect: () => showNotImplemented('Preview video'),
-        },
         {
           label: effectiveIds.length > 1 ? 'Apply selected items' : 'Apply this item',
           onSelect: () => showNotImplemented('Apply affected item'),
@@ -459,12 +453,12 @@ export function QueuePage() {
       const count = dialog.operationIds.length;
       return (
         <AppDialog
-          title={`Remove ${count} ${count === 1 ? 'operation' : 'operations'} from queue?`}
-          description="This removes the operation from the mock queue list."
+          title={`Clear ${count} ${count === 1 ? 'operation' : 'operations'} from queue?`}
+          description="This clears the operation from the mock queue list."
           actions={[
             { label: 'Cancel', onClick: () => setDialog(null) },
             {
-              label: 'Remove from queue',
+              label: 'Clear from queue',
               variant: 'danger',
               onClick: () => removeOperations(dialog.operationIds),
             },
@@ -493,7 +487,7 @@ export function QueuePage() {
       return (
         <AppDialog
           title={`Remove ${count} affected ${count === 1 ? 'item' : 'items'} from operation?`}
-          description="This only changes the mock operation preview."
+          description="This only changes the mock operation details."
           actions={[
             { label: 'Cancel', onClick: () => setDialog(null) },
             {
@@ -571,7 +565,6 @@ export function QueuePage() {
             totalPages={affectedTotalPages}
             onApplyOperation={(id) => applyOperations([id])}
             onCancelOperation={(id) => setDialog({ type: 'cancelOperations', operationIds: [id] })}
-            onPreviewOperation={(id) => setDetailOperationId(id)}
             onOpenOperationContextMenu={openOperationContextMenu}
             onActivateAffectedTable={() => setActiveScope('queueDetailVideos')}
             onSelectAffectedVideo={selectAffectedWithModifiers}

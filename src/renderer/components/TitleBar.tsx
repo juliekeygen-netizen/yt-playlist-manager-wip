@@ -3,6 +3,16 @@ import type { CSSProperties } from 'react';
 
 export function TitleBar() {
   const noDragStyle = { WebkitAppRegion: 'no-drag' } as CSSProperties;
+  const runWindowControl = (action: 'minimize' | 'close') => {
+    const controls = window.windowControls;
+
+    if (!controls?.ready) {
+      console.warn(`Window controls bridge is unavailable; cannot ${action} window.`);
+      return;
+    }
+
+    void controls[action]();
+  };
 
   return (
     <header className="drag-region flex h-14 shrink-0 items-center justify-between border-b border-white/[0.08] bg-shell-950/80 px-7 backdrop-blur-xl">
@@ -15,7 +25,7 @@ export function TitleBar() {
         </span>
       </div>
 
-      <div className="no-drag flex items-center gap-4 text-sm">
+      <div className="no-drag flex items-center gap-4 text-sm" style={noDragStyle}>
         <div className="flex items-center gap-2 rounded-md border border-emerald-400/10 bg-emerald-400/10 px-3 py-1.5 text-emerald-300">
           <span className="h-2.5 w-2.5 rounded-full bg-emerald-400 shadow-[0_0_16px_rgba(52,211,153,0.65)]" />
           Session connected
@@ -29,13 +39,11 @@ export function TitleBar() {
           <CircleHelp size={18} />
           Help
         </button>
-        <div className="ml-4 flex items-center gap-1 text-mist-400">
+        <div className="no-drag ml-4 flex items-center gap-1 text-mist-400" style={noDragStyle}>
           <button
             aria-label="Minimize window"
             className="no-drag rounded-md p-2 transition hover:bg-white/7 hover:text-white"
-            onClick={() => {
-              void window.windowControls?.minimize();
-            }}
+            onClick={() => runWindowControl('minimize')}
             onMouseDown={(event) => event.stopPropagation()}
             onPointerDown={(event) => event.stopPropagation()}
             style={noDragStyle}
@@ -46,9 +54,7 @@ export function TitleBar() {
           <button
             aria-label="Close window"
             className="no-drag rounded-md p-2 transition hover:bg-red-500/20 hover:text-red-100"
-            onClick={() => {
-              void window.windowControls?.close();
-            }}
+            onClick={() => runWindowControl('close')}
             onMouseDown={(event) => event.stopPropagation()}
             onPointerDown={(event) => event.stopPropagation()}
             style={noDragStyle}

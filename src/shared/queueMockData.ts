@@ -237,7 +237,7 @@ export const queueOperations: QueueOperation[] = [
     status: 'Pending',
     createdAt: 'Today, 10:10 PM',
     createdOrder: 8,
-    note: 'This will remove duplicate entries from Coding Music after preview.',
+    note: 'This will remove duplicate entries from Coding Music after review.',
     affectedVideos: [
       {
         id: 'queue-duplicate-synth',

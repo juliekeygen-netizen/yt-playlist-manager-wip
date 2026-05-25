@@ -1,6 +1,6 @@
-# YT Playlist Manager
+# YT Playlist Manager WIP
 
-Initial Electron + React + TypeScript + Vite + Tailwind CSS desktop UI shell for a YouTube playlist manager.
+Work-in-progress Electron + React + TypeScript + Vite + Tailwind CSS desktop UI prototype for managing YouTube playlists.
 
 ## Getting Started
 
@@ -25,4 +25,6 @@ npm run build
 
 ## Notes
 
-This version is a polished mock dashboard only. It does not implement YouTube API access, cookie parsing, authentication, file export, settings persistence, database storage, or playlist modifications.
+This is currently a mock UI/prototype. It includes Home, Playlists, and Queue screens with mock playlist data, mock copy/move/remove workflows, context menus, filtering, sorting, pagination, manual reorder UI, and mock queue operation details.
+
+It does not yet implement real YouTube API access, cookie parsing, authentication, persistent app data, real export, database storage, or real playlist modifications.

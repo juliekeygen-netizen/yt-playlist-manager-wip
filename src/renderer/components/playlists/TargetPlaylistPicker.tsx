@@ -36,7 +36,7 @@ const sortLabels: Record<PlaylistSortKey, string> = {
   totalDuration: 'Total duration',
 };
 
-const tableGrid = 'grid-cols-[40px_86px_minmax(260px,2fr)_100px_126px_158px_28px]';
+const tableGrid = 'grid-cols-[40px_86px_minmax(260px,2fr)_100px_126px_158px_36px]';
 
 export function TargetPlaylistPicker({
   mode,
@@ -156,7 +156,7 @@ export function TargetPlaylistPicker({
         </button>
       </section>
 
-      <div className={`mt-4 grid shrink-0 ${tableGrid} items-center border-y border-white/[0.055] pl-6 pr-4 py-3 text-sm font-medium text-mist-300`}>
+      <div className={`mt-4 grid shrink-0 ${tableGrid} items-center border-y border-white/[0.055] pl-6 pr-6 py-3 text-sm font-medium text-mist-300`}>
         <span />
         <span />
         <span>Playlist</span>
@@ -176,7 +176,7 @@ export function TargetPlaylistPicker({
                 key={playlist.id}
                 role="button"
                 tabIndex={disabled ? -1 : 0}
-                className={`grid min-h-[62px] w-full ${tableGrid} items-center border-b border-white/[0.045] pl-6 pr-4 py-2.5 text-left text-sm transition ${
+                className={`grid min-h-[62px] w-full ${tableGrid} items-center border-b border-white/[0.045] pl-6 pr-6 py-2.5 text-left text-sm transition ${
                   disabled ? 'cursor-not-allowed opacity-45' : 'hover:bg-white/[0.03]'
                 } ${selectedTargetIds.includes(playlist.id) ? 'bg-blue-500/[0.08]' : ''}`}
                 title={title}
@@ -218,7 +218,7 @@ export function TargetPlaylistPicker({
                 <StatusText status={rowStatus} />
                 <span className="text-mist-400">{playlist.lastSynced}</span>
                 <button
-                  className="rounded-md p-1 text-mist-500 transition hover:bg-white/[0.07] hover:text-mist-100"
+                  className="justify-self-end rounded-md p-1 text-mist-500 transition hover:bg-white/[0.07] hover:text-mist-100"
                   onClick={(event) => {
                     event.stopPropagation();
                     onOpenPlaylistContextMenu(playlist.id, event.clientX, event.clientY);

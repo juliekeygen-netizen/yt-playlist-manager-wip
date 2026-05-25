@@ -1,4 +1,4 @@
-import { Eye, Info, MoreVertical, Play, X } from 'lucide-react';
+import { Info, MoreVertical, Play, X } from 'lucide-react';
 import type {
   QueueAffectedVideo,
   QueueOperation,
@@ -19,7 +19,6 @@ export function QueueDetailPanel({
   totalPages,
   onApplyOperation,
   onCancelOperation,
-  onPreviewOperation,
   onOpenOperationContextMenu,
   onActivateAffectedTable,
   onSelectAffectedVideo,
@@ -39,7 +38,6 @@ export function QueueDetailPanel({
   totalPages: number;
   onApplyOperation: (id: string) => void;
   onCancelOperation: (id: string) => void;
-  onPreviewOperation: (id: string) => void;
   onOpenOperationContextMenu: (id: string, x: number, y: number) => void;
   onActivateAffectedTable: () => void;
   onSelectAffectedVideo: (id: string, modifiers: QueueSelectionModifiers, visibleIds: string[]) => void;
@@ -54,7 +52,7 @@ export function QueueDetailPanel({
       <section className="panel flex min-h-0 min-w-0 flex-1 items-center justify-center rounded-lg px-8 text-center">
         <div>
           <h2 className="text-xl font-semibold text-mist-50">No operation selected</h2>
-          <p className="mt-2 text-sm text-mist-400">Select an operation to preview its details.</p>
+          <p className="mt-2 text-sm text-mist-400">Select an operation to view its details.</p>
         </div>
       </section>
     );
@@ -90,13 +88,6 @@ export function QueueDetailPanel({
           </p>
         </div>
         <div className="ml-auto flex items-center gap-2">
-          <button
-            className="flex h-10 items-center gap-2 rounded-md border border-white/[0.09] bg-white/[0.035] px-4 text-sm text-mist-100 transition hover:bg-white/[0.07]"
-            onClick={() => onPreviewOperation(operation.id)}
-          >
-            <Eye size={17} />
-            Preview
-          </button>
           <button
             className="flex h-10 w-10 items-center justify-center rounded-md border border-white/[0.09] bg-white/[0.035] text-mist-400 transition hover:bg-white/[0.07] hover:text-mist-100"
             onClick={(event) => onOpenOperationContextMenu(operation.id, event.clientX, event.clientY)}

@@ -6,7 +6,7 @@ import { StatusText } from './StatusBadge';
 import { ThumbnailPlaceholder } from './ThumbnailPlaceholder';
 
 const tableGrid =
-  'grid-cols-[26px_34px_82px_minmax(230px,2.4fr)_minmax(128px,1fr)_82px_92px_118px_28px]';
+  'grid-cols-[26px_34px_82px_minmax(230px,2.4fr)_minmax(128px,1fr)_82px_92px_118px_36px]';
 
 const rowsPerPageOptions = [
   { label: '10', value: 10 },
@@ -105,7 +105,7 @@ export function VideoTable({
       data-active-list-scope="videoTable"
       onPointerDownCapture={onActivate}
     >
-      <div className={`grid shrink-0 ${tableGrid} items-center border-b border-white/[0.055] px-4 py-3 text-sm font-medium text-mist-300`}>
+      <div className={`grid shrink-0 ${tableGrid} items-center border-b border-white/[0.055] pl-4 pr-6 py-3 text-sm font-medium text-mist-300`}>
         <span />
         <input
           ref={checkboxRef}
@@ -256,7 +256,7 @@ function VideoRow({
 }) {
   return (
     <div
-      className={`grid min-h-[62px] ${tableGrid} items-center border-b border-white/[0.045] px-4 py-2.5 text-sm ${
+      className={`grid min-h-[62px] ${tableGrid} items-center border-b border-white/[0.045] pl-4 pr-6 py-2.5 text-sm ${
         selected ? 'bg-blue-500/[0.055]' : 'hover:bg-white/[0.025]'
       } ${dragging ? 'opacity-55' : ''} ${dragOver ? 'bg-blue-400/[0.09] shadow-[inset_0_2px_0_rgba(96,165,250,0.75)]' : ''}`}
       onClick={(event) => onSelect(video.id, getSelectionModifiers(event), visibleVideoIds)}
@@ -312,7 +312,7 @@ function VideoRow({
       <StatusText status={video.status} />
       <span className="text-mist-400">{video.dateAdded}</span>
       <button
-        className="rounded-md p-1 text-mist-500 transition hover:bg-white/[0.07] hover:text-mist-100"
+        className="justify-self-end rounded-md p-1 text-mist-500 transition hover:bg-white/[0.07] hover:text-mist-100"
         onClick={(event) => {
           event.stopPropagation();
           onOpenContextMenu(event);
