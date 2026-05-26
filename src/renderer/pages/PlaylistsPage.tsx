@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, type Dispatch, type SetStateAction } from 'react';
 import {
   initiallySelectedVideoIds,
   type PlaylistListRecord,
@@ -22,33 +22,41 @@ import { PlaylistListPanel } from '../components/playlists/PlaylistListPanel';
 import { PlaylistPageToolbar } from '../components/playlists/PlaylistPageToolbar';
 import { TargetPlaylistPicker, type TargetPickerMode } from '../components/playlists/TargetPlaylistPicker';
 import type { SelectionModifiers } from '../components/playlists/VideoTable';
+import { useSettings } from '../contexts/settingsContextValue';
 
 type WorkspaceMode = 'videos' | TargetPickerMode | 'removeConfirm';
-type ActiveListScope = 'none' | 'videoTable' | TargetPickerMode;
+type ActiveListScope = 'none' | 'playlistList' | 'videoTable' | TargetPickerMode;
 type DialogState =
   | { type: 'renamePlaylist'; playlistId: string; value: string }
   | { type: 'duplicatePlaylist'; playlistId: string; value: string }
-  | { type: 'removePlaylist'; playlistId: string }
+  | { type: 'deletePlaylists'; playlistIds: string[] }
+  | { type: 'playlistSelectionList'; playlistIds: string[] }
   | { type: 'removeVideos'; videoIds: string[] }
   | { type: 'notImplemented'; title: string; message: string };
 
 export function PlaylistsPage() {
+  const { settings } = useSettings();
   const [playlistRows, setPlaylistRows] = useState<PlaylistListRecord[]>(() => playlistRecords);
   const [activePlaylistId, setActivePlaylistId] = useState(selectedPlaylistId);
   const [videosByPlaylistId, setVideosByPlaylistId] = useState<Record<string, PlaylistVideo[]>>(
     () => playlistVideosByPlaylistId,
   );
   const [selectedVideoIds, setSelectedVideoIds] = useState<string[]>(initiallySelectedVideoIds);
+  const [selectedPlaylistIds, setSelectedPlaylistIds] = useState<string[]>([selectedPlaylistId]);
   const [workspaceMode, setWorkspaceMode] = useState<WorkspaceMode>('videos');
   const [playlistSearch, setPlaylistSearch] = useState('');
-  const [playlistStatusFilter, setPlaylistStatusFilter] = useState<PlaylistStatusFilter>('All');
-  const [playlistSortKey, setPlaylistSortKey] = useState<PlaylistSortKey>('recentlyUpdated');
-  const [playlistSortDirection, setPlaylistSortDirection] = useState<SortDirection>('desc');
+  const [playlistStatusFilter, setPlaylistStatusFilter] = useState<PlaylistStatusFilter>('All statuses');
+  const [playlistSortKey, setPlaylistSortKey] = useState<PlaylistSortKey>(settings.defaultPlaylistSort);
+  const [playlistSortDirection, setPlaylistSortDirection] = useState<SortDirection>(
+    settings.defaultPlaylistSort === 'playlistName' ? 'asc' : 'desc',
+  );
   const [videoSearch, setVideoSearch] = useState('');
   const [videoStatusFilter, setVideoStatusFilter] = useState<VideoStatusFilter>('All statuses');
-  const [videoSortKey, setVideoSortKey] = useState<VideoSortKey>('dateAdded');
-  const [videoSortDirection, setVideoSortDirection] = useState<SortDirection>('desc');
-  const [rowsPerPage, setRowsPerPage] = useState<RowsPerPage>(10);
+  const [videoSortKey, setVideoSortKey] = useState<VideoSortKey>(settings.defaultVideoSort);
+  const [videoSortDirection, setVideoSortDirection] = useState<SortDirection>(
+    settings.defaultVideoSort === 'dateAdded' || settings.defaultVideoSort === 'manual' ? 'desc' : 'asc',
+  );
+  const [rowsPerPage, setRowsPerPage] = useState<RowsPerPage>(settings.defaultRowsPerPage);
   const [page, setPage] = useState(1);
   const [targetSearch, setTargetSearch] = useState('');
   const [targetStatusFilter, setTargetStatusFilter] =
@@ -57,6 +65,7 @@ export function PlaylistsPage() {
   const [targetSortDirection, setTargetSortDirection] = useState<SortDirection>('asc');
   const [selectedTargetPlaylistIds, setSelectedTargetPlaylistIds] = useState<string[]>([]);
   const [activeListScope, setActiveListScope] = useState<ActiveListScope>('none');
+  const [playlistSelectionAnchorId, setPlaylistSelectionAnchorId] = useState<string | null>(selectedPlaylistId);
   const [videoSelectionAnchorId, setVideoSelectionAnchorId] = useState<string | null>(null);
   const [targetSelectionAnchorId, setTargetSelectionAnchorId] = useState<string | null>(null);
   const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null);
@@ -89,7 +98,7 @@ export function PlaylistsPage() {
     const search = playlistSearch.trim().toLowerCase();
     const filtered = playlistsWithCounts.filter((playlist) => {
       const matchesSearch = playlist.title.toLowerCase().startsWith(search);
-      const matchesStatus = playlistStatusFilter === 'All' || playlist.status === playlistStatusFilter;
+      const matchesStatus = playlistStatusFilter === 'All statuses' || playlist.status === playlistStatusFilter;
       return matchesSearch && matchesStatus;
     });
 
@@ -154,6 +163,8 @@ export function PlaylistsPage() {
   useEffect(() => {
     if (visiblePlaylists.length > 0 && !visiblePlaylists.some((playlist) => playlist.id === activePlaylistId)) {
       setActivePlaylistId(visiblePlaylists[0].id);
+      setSelectedPlaylistIds([visiblePlaylists[0].id]);
+      setPlaylistSelectionAnchorId(visiblePlaylists[0].id);
       setSelectedVideoIds([]);
       setPage(1);
     }
@@ -210,6 +221,26 @@ export function PlaylistsPage() {
         return;
       }
 
+      if (activeListScope === 'playlistList') {
+        const visibleIds = visiblePlaylists.map((playlist) => playlist.id);
+        if (modifierPressed && key === 'a') {
+          event.preventDefault();
+          setSelectedPlaylistIds(visibleIds);
+          return;
+        }
+        if (modifierPressed && key === 'd') {
+          event.preventDefault();
+          setSelectedPlaylistIds([]);
+          setPlaylistSelectionAnchorId(null);
+          return;
+        }
+        if (modifierPressed && key === 'i') {
+          event.preventDefault();
+          invertSelection(visibleIds, setSelectedPlaylistIds);
+        }
+        return;
+      }
+
       if (modifierPressed && key === 'a') {
         event.preventDefault();
         return;
@@ -232,14 +263,33 @@ export function PlaylistsPage() {
     return () => document.removeEventListener('keydown', handleSelectionShortcut);
   });
 
-  function selectPlaylist(playlistId: string) {
+  function selectPlaylistWithModifiers(
+    playlistId: string,
+    modifiers: SelectionModifiers,
+    visiblePlaylistIds: string[],
+  ) {
+    cancelWorkflow();
+    setActiveListScope('playlistList');
     setActivePlaylistId(playlistId);
     setSelectedVideoIds([]);
     setVideoSelectionAnchorId(null);
     setTargetSelectionAnchorId(null);
-    setActiveListScope('none');
-    cancelWorkflow();
     setPage(1);
+
+    if (modifiers.shiftKey) {
+      const rangeIds = getRangeIds(visiblePlaylistIds, playlistSelectionAnchorId, playlistId);
+      setSelectedPlaylistIds((current) =>
+        modifiers.ctrlKey || modifiers.metaKey ? mergeUnique(current, rangeIds) : rangeIds,
+      );
+    } else if (modifiers.ctrlKey || modifiers.metaKey || modifiers.checkboxToggle) {
+      setSelectedPlaylistIds((current) =>
+        current.includes(playlistId) ? current.filter((id) => id !== playlistId) : [...current, playlistId],
+      );
+    } else {
+      setSelectedPlaylistIds([playlistId]);
+    }
+
+    setPlaylistSelectionAnchorId(playlistId);
   }
 
   function toggleAllFilteredVideos() {
@@ -293,9 +343,7 @@ export function PlaylistsPage() {
         current.includes(videoId) ? current.filter((id) => id !== videoId) : [...current, videoId],
       );
     } else {
-      setSelectedVideoIds((current) =>
-        current.includes(videoId) ? current.filter((id) => id !== videoId) : [videoId],
-      );
+      setSelectedVideoIds([videoId]);
     }
 
     setVideoSelectionAnchorId(videoId);
@@ -379,7 +427,7 @@ export function PlaylistsPage() {
 
     setSelectedTargetPlaylistIds((current) => {
       if (workspaceMode === 'moveTarget') {
-        return current.includes(playlistId) ? [] : [playlistId];
+        return [playlistId];
       }
 
       if (modifiers.shiftKey) {
@@ -387,7 +435,13 @@ export function PlaylistsPage() {
         return modifiers.ctrlKey || modifiers.metaKey ? mergeUnique(current, rangeIds) : rangeIds;
       }
 
-      return current.includes(playlistId) ? current.filter((id) => id !== playlistId) : [...current, playlistId];
+      if (modifiers.ctrlKey || modifiers.metaKey || modifiers.checkboxToggle) {
+        return current.includes(playlistId)
+          ? current.filter((id) => id !== playlistId)
+          : [...current, playlistId];
+      }
+
+      return [playlistId];
     });
     setTargetSelectionAnchorId(playlistId);
   }
@@ -464,6 +518,24 @@ export function PlaylistsPage() {
     removeVideoIds(selectedVideoIds);
   }
 
+  function requestRemoveVideos(videoIds: string[]) {
+    if (videoIds.length === 0) return;
+    if (settings.confirmDestructiveActions) {
+      setDialog({ type: 'removeVideos', videoIds });
+    } else {
+      removeVideoIds(videoIds);
+    }
+  }
+
+  function requestDeletePlaylists(playlistIds: string[]) {
+    if (playlistIds.length === 0) return;
+    if (settings.confirmDestructiveActions) {
+      setDialog({ type: 'deletePlaylists', playlistIds });
+    } else {
+      deletePlaylists(playlistIds);
+    }
+  }
+
   function removeVideoIds(videoIds: string[]) {
     if (!selectedPlaylist || videoIds.length === 0) return;
     const selectedSet = new Set(videoIds);
@@ -524,21 +596,30 @@ export function PlaylistsPage() {
     setDialog(null);
   }
 
-  function removePlaylist(playlistId: string) {
-    const remainingPlaylists = playlistRows.filter((playlist) => playlist.id !== playlistId);
+  function deletePlaylists(playlistIds: string[]) {
+    const idSet = new Set(playlistIds);
+    const remainingPlaylists = playlistRows.filter((playlist) => !idSet.has(playlist.id));
     setPlaylistRows(remainingPlaylists);
     setVideosByPlaylistId((current) => {
       const next = { ...current };
-      delete next[playlistId];
+      for (const playlistId of playlistIds) {
+        delete next[playlistId];
+      }
       return next;
     });
     setManualVideoOrderByPlaylistId((current) => {
       const next = { ...current };
-      delete next[playlistId];
+      for (const playlistId of playlistIds) {
+        delete next[playlistId];
+      }
       return next;
     });
-    if (activePlaylistId === playlistId) {
-      setActivePlaylistId(remainingPlaylists[0]?.id ?? '');
+    setSelectedPlaylistIds((current) => current.filter((playlistId) => !idSet.has(playlistId)));
+    if (idSet.has(activePlaylistId)) {
+      const nextPlaylistId = remainingPlaylists[0]?.id ?? '';
+      setActivePlaylistId(nextPlaylistId);
+      setSelectedPlaylistIds(nextPlaylistId ? [nextPlaylistId] : []);
+      setPlaylistSelectionAnchorId(nextPlaylistId || null);
       setSelectedVideoIds([]);
       cancelWorkflow();
     }
@@ -550,6 +631,13 @@ export function PlaylistsPage() {
       current.map((playlist) =>
         playlist.id === playlistId ? { ...playlist, pinned: !playlist.pinned } : playlist,
       ),
+    );
+  }
+
+  function pinPlaylists(playlistIds: string[]) {
+    const idSet = new Set(playlistIds);
+    setPlaylistRows((current) =>
+      current.map((playlist) => (idSet.has(playlist.id) ? { ...playlist, pinned: true } : playlist)),
     );
   }
 
@@ -572,47 +660,62 @@ export function PlaylistsPage() {
   }
 
   function openPlaylistContextMenu(playlistId: string, x: number, y: number) {
+    const effectivePlaylistIds = selectedPlaylistIds.includes(playlistId) ? selectedPlaylistIds : [playlistId];
+    const multiSelect = effectivePlaylistIds.length > 1;
+
     setContextMenu({
       x,
       y,
-      items: [
-        {
-          label: 'Rename',
-          onSelect: () => {
-            const playlist = playlistRows.find((item) => item.id === playlistId);
-            if (playlist) {
-              setDialog({ type: 'renamePlaylist', playlistId, value: playlist.title });
-            }
-          },
-        },
-        {
-          label: playlistRows.find((item) => item.id === playlistId)?.pinned ? 'Unpin playlist' : 'Pin playlist',
-          onSelect: () => togglePinnedPlaylist(playlistId),
-        },
-        {
-          label: 'Duplicate',
-          onSelect: () => {
-            const playlist = playlistRows.find((item) => item.id === playlistId);
-            if (playlist) {
-              setDialog({
-                type: 'duplicatePlaylist',
-                playlistId,
-                value: `${playlist.title} Copy`,
-              });
-            }
-          },
-        },
-        {
-          label: 'Remove',
-          destructive: true,
-          onSelect: () => setDialog({ type: 'removePlaylist', playlistId }),
-        },
-        { label: 'Export', disabled: true, onSelect: () => showNotImplemented('Export playlist') },
-        { label: 'Stats', disabled: true, onSelect: () => showNotImplemented('Playlist stats') },
-      ],
+      items: multiSelect
+        ? [
+            {
+              label: 'Pin',
+              onSelect: () => pinPlaylists(effectivePlaylistIds),
+            },
+            {
+              label: 'Delete',
+              destructive: true,
+              onSelect: () => requestDeletePlaylists(effectivePlaylistIds),
+            },
+            { label: 'Export', disabled: true, onSelect: () => showNotImplemented('Export playlists') },
+          ]
+        : [
+            {
+              label: 'Rename',
+              onSelect: () => {
+                const playlist = playlistRows.find((item) => item.id === playlistId);
+                if (playlist) {
+                  setDialog({ type: 'renamePlaylist', playlistId, value: playlist.title });
+                }
+              },
+            },
+            {
+              label: 'Pin',
+              onSelect: () => togglePinnedPlaylist(playlistId),
+            },
+            {
+              label: 'Duplicate',
+              onSelect: () => {
+                const playlist = playlistRows.find((item) => item.id === playlistId);
+                if (playlist) {
+                  setDialog({
+                    type: 'duplicatePlaylist',
+                    playlistId,
+                    value: `${playlist.title} Copy`,
+                  });
+                }
+              },
+            },
+            {
+              label: 'Delete',
+              destructive: true,
+              onSelect: () => requestDeletePlaylists([playlistId]),
+            },
+            { label: 'Export', disabled: true, onSelect: () => showNotImplemented('Export playlist') },
+            { label: 'Stats', disabled: true, onSelect: () => showNotImplemented('Playlist stats') },
+          ],
     });
   }
-
   function openVideoContextMenu(videoId: string, x: number, y: number) {
     setContextMenu({
       x,
@@ -624,7 +727,7 @@ export function PlaylistsPage() {
         {
           label: 'Remove',
           destructive: true,
-          onSelect: () => setDialog({ type: 'removeVideos', videoIds: getEffectiveVideoIds(videoId) }),
+          onSelect: () => requestRemoveVideos(getEffectiveVideoIds(videoId)),
         },
         { label: 'Export', disabled: true, onSelect: () => showNotImplemented('Export video') },
         { label: 'Stats', disabled: true, onSelect: () => showNotImplemented('Video stats') },
@@ -715,20 +818,54 @@ export function PlaylistsPage() {
       );
     }
 
-    if (dialog.type === 'removePlaylist') {
-      const playlistTitle = playlistRows.find((playlist) => playlist.id === dialog.playlistId)?.title ?? 'this playlist';
+    if (dialog.type === 'deletePlaylists') {
+      const count = dialog.playlistIds.length;
+      const playlistTitle =
+        count === 1
+          ? playlistRows.find((playlist) => playlist.id === dialog.playlistIds[0])?.title ?? 'this playlist'
+          : null;
       return (
         <AppDialog
-          title={`Remove playlist "${playlistTitle}"?`}
-          description="This only removes the playlist from the mock UI state."
+          title={
+            count === 1
+              ? `Delete playlist "${playlistTitle}"?`
+              : `Delete ${count} playlists?`
+          }
+          description={
+            count === 1
+              ? 'This only deletes the playlist from the mock UI state.'
+              : 'This only deletes these playlists from the mock UI state.'
+          }
           actions={[
+            ...(count > 1
+              ? [
+                  {
+                    label: 'List of playlists',
+                    onClick: () => setDialog({ type: 'playlistSelectionList', playlistIds: dialog.playlistIds }),
+                  },
+                ]
+              : []),
             { label: 'Cancel', onClick: () => setDialog(null) },
             {
-              label: 'Remove playlist',
+              label: count === 1 ? 'Delete playlist' : 'Delete playlists',
               variant: 'danger',
-              onClick: () => removePlaylist(dialog.playlistId),
+              onClick: () => deletePlaylists(dialog.playlistIds),
             },
           ]}
+          onClose={() => setDialog(null)}
+        />
+      );
+    }
+
+    if (dialog.type === 'playlistSelectionList') {
+      const selectedTitles = playlistRows
+        .filter((playlist) => dialog.playlistIds.includes(playlist.id))
+        .map((playlist) => playlist.title);
+      return (
+        <AppDialog
+          title="Selected playlists"
+          description={selectedTitles.map((title) => `• ${title}`).join('\n')}
+          actions={[{ label: 'Close', variant: 'primary', onClick: () => setDialog(null) }]}
           onClose={() => setDialog(null)}
         />
       );
@@ -801,7 +938,9 @@ export function PlaylistsPage() {
         <PlaylistListPanel
           playlists={visiblePlaylists}
           selectedId={selectedPlaylist?.id ?? ''}
-          onSelect={selectPlaylist}
+          selectedIds={selectedPlaylistIds}
+          onActivate={() => setActiveListScope('playlistList')}
+          onSelect={selectPlaylistWithModifiers}
           onOpenContextMenu={openPlaylistContextMenu}
         />
         {selectedPlaylist && (workspaceMode === 'copyTarget' || workspaceMode === 'moveTarget') ? (
@@ -862,7 +1001,7 @@ export function PlaylistsPage() {
             onReorderVisibleVideos={reorderVisibleVideos}
             onCopySelected={() => openTargetPicker('copyTarget')}
             onMoveSelected={() => openTargetPicker('moveTarget')}
-            onRemoveSelected={() => setDialog({ type: 'removeVideos', videoIds: selectedVideoIds })}
+            onRemoveSelected={() => requestRemoveVideos(selectedVideoIds)}
             onClearSelection={() => setSelectedVideoIds([])}
             removeConfirmActive={workspaceMode === 'removeConfirm'}
             onConfirmRemove={removeSelectedVideos}
@@ -965,6 +1104,20 @@ function moveItemToEnd(items: string[], draggedId: string) {
 
 function mergeUnique(current: string[], next: string[]) {
   return Array.from(new Set([...current, ...next]));
+}
+
+function invertSelection(
+  visibleIds: string[],
+  setSelected: Dispatch<SetStateAction<string[]>>,
+) {
+  const visibleSet = new Set(visibleIds);
+  setSelected((current) => {
+    const currentSet = new Set(current);
+    return [
+      ...current.filter((id) => !visibleSet.has(id)),
+      ...visibleIds.filter((id) => !currentSet.has(id)),
+    ];
+  });
 }
 
 function getRangeIds(orderedIds: string[], anchorId: string | null, clickedId: string) {

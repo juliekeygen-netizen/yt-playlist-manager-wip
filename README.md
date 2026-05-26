@@ -25,6 +25,6 @@ npm run build
 
 ## Notes
 
-This project is a work-in-progress desktop UI prototype. It currently includes mock Home, Playlists, Queue, History, soon etc. screens with fake playlist data, mock copy/move/remove workflows, context menus, filtering, sorting, pagination, manual reorder UI, queue operation previews, and recovery-focused history mockups.
+This project is a work-in-progress desktop UI prototype. It currently includes mock Home, Playlists, Queue, and History screens with fake playlist data, mock copy/move/remove workflows, context menus, filtering, sorting, pagination, manual reorder UI, queue operation details, and recovery-focused history workflows.
 
 It does not yet implement real YouTube API access, cookie parsing, authentication, persistent settings, local backup storage, database storage, real file export, or real playlist modifications.

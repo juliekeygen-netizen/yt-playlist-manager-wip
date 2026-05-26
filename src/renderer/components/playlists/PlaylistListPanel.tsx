@@ -7,16 +7,26 @@ import { ThumbnailPlaceholder } from './ThumbnailPlaceholder';
 export function PlaylistListPanel({
   playlists,
   selectedId,
+  selectedIds,
+  onActivate,
   onSelect,
   onOpenContextMenu,
 }: {
   playlists: PlaylistListRecord[];
   selectedId: string;
-  onSelect: (id: string) => void;
+  selectedIds: string[];
+  onActivate: () => void;
+  onSelect: (id: string, modifiers: PlaylistSelectionModifiers, visibleIds: string[]) => void;
   onOpenContextMenu: (playlistId: string, x: number, y: number) => void;
 }) {
+  const visibleIds = playlists.map((playlist) => playlist.id);
+
   return (
-    <section className="panel flex min-h-0 w-[360px] shrink-0 flex-col overflow-hidden rounded-lg">
+    <section
+      className="panel flex min-h-0 w-[360px] shrink-0 flex-col overflow-hidden rounded-lg"
+      data-active-list-scope="playlistList"
+      onPointerDownCapture={onActivate}
+    >
       <div className="playlist-list-scroll min-h-0 flex-1 overflow-y-auto">
         {playlists.length > 0 ? (
           playlists.map((playlist) => (
@@ -24,7 +34,9 @@ export function PlaylistListPanel({
               key={playlist.id}
               playlist={playlist}
               selected={playlist.id === selectedId}
-              onSelect={() => onSelect(playlist.id)}
+              multiSelected={selectedIds.includes(playlist.id)}
+              visibleIds={visibleIds}
+              onSelect={onSelect}
               onOpenContextMenu={(event) => onOpenContextMenu(playlist.id, event.clientX, event.clientY)}
             />
           ))
@@ -50,12 +62,16 @@ export function PlaylistListPanel({
 function PlaylistListItem({
   playlist,
   selected,
+  multiSelected,
+  visibleIds,
   onSelect,
   onOpenContextMenu,
 }: {
   playlist: PlaylistListRecord;
   selected: boolean;
-  onSelect: () => void;
+  multiSelected: boolean;
+  visibleIds: string[];
+  onSelect: (id: string, modifiers: PlaylistSelectionModifiers, visibleIds: string[]) => void;
   onOpenContextMenu: (event: MouseEvent<HTMLElement>) => void;
 }) {
   return (
@@ -63,9 +79,11 @@ function PlaylistListItem({
       className={`relative mx-2 my-1 grid cursor-default grid-cols-[80px_minmax(0,1fr)_28px] gap-4 overflow-hidden rounded-lg px-4 py-4 ${
         selected
           ? 'bg-blue-500/[0.025]'
-          : 'border-b border-white/[0.045] hover:bg-white/[0.035]'
+          : multiSelected
+            ? 'bg-blue-500/[0.07]'
+            : 'border-b border-white/[0.045] hover:bg-white/[0.035]'
       }`}
-      onClick={onSelect}
+      onClick={(event) => onSelect(playlist.id, getSelectionModifiers(event), visibleIds)}
       onContextMenu={(event) => {
         event.preventDefault();
         onOpenContextMenu(event);
@@ -92,7 +110,7 @@ function PlaylistListItem({
         </div>
       </div>
       <button
-        className="relative z-10 mb-4 self-end rounded-md p-1 text-mist-500 transition hover:bg-white/[0.07] hover:text-mist-100"
+        className="relative z-10 place-self-center rounded-md p-1 text-mist-500 transition hover:bg-white/[0.07] hover:text-mist-100"
         onClick={(event) => {
           event.stopPropagation();
           onOpenContextMenu(event);
@@ -102,4 +120,19 @@ function PlaylistListItem({
       </button>
     </article>
   );
+}
+
+export interface PlaylistSelectionModifiers {
+  shiftKey: boolean;
+  ctrlKey: boolean;
+  metaKey: boolean;
+  checkboxToggle?: boolean;
+}
+
+function getSelectionModifiers(event: MouseEvent<HTMLElement>): PlaylistSelectionModifiers {
+  return {
+    shiftKey: event.shiftKey,
+    ctrlKey: event.ctrlKey,
+    metaKey: event.metaKey,
+  };
 }

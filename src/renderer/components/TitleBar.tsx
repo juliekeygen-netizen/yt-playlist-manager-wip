@@ -1,7 +1,7 @@
 import { CircleHelp, Minus, Settings, X } from 'lucide-react';
 import type { CSSProperties } from 'react';
 
-export function TitleBar() {
+export function TitleBar({ onOpenSettings }: { onOpenSettings: () => void }) {
   const noDragStyle = { WebkitAppRegion: 'no-drag' } as CSSProperties;
   const runWindowControl = (action: 'minimize' | 'close') => {
     const controls = window.windowControls;
@@ -26,11 +26,11 @@ export function TitleBar() {
       </div>
 
       <div className="no-drag flex items-center gap-4 text-sm" style={noDragStyle}>
-        <div className="flex items-center gap-2 rounded-md border border-emerald-400/10 bg-emerald-400/10 px-3 py-1.5 text-emerald-300">
-          <span className="h-2.5 w-2.5 rounded-full bg-emerald-400 shadow-[0_0_16px_rgba(52,211,153,0.65)]" />
-          Session connected
-        </div>
-        <button className="flex items-center gap-2 rounded-md px-2.5 py-1.5 text-mist-200 transition hover:bg-white/7 hover:text-white">
+        <button
+          className="flex items-center gap-2 rounded-md px-2.5 py-1.5 text-mist-200 transition hover:bg-white/7 hover:text-white"
+          onClick={onOpenSettings}
+          type="button"
+        >
           <Settings size={18} />
           Settings
         </button>

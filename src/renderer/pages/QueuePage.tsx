@@ -9,11 +9,13 @@ import {
   type QueueStatusFilter,
   type QueueTypeFilter,
 } from '@shared/queueMockData';
+import { toCompactQueueRowsPerPage } from '@shared/settings';
 import { AppDialog } from '../components/playlists/AppDialog';
 import { ContextMenu, type ContextMenuState } from '../components/playlists/ContextMenu';
 import { QueueDetailPanel } from '../components/queue/QueueDetailPanel';
 import { QueueOperationList, type QueueSelectionModifiers } from '../components/queue/QueueOperationList';
 import { QueueToolbar } from '../components/queue/QueueToolbar';
+import { useSettings } from '../contexts/settingsContextValue';
 
 type QueueActiveScope = 'none' | 'queueList' | 'queueDetailVideos';
 type QueueDialog =
@@ -36,6 +38,7 @@ const statusSortOrder: QueueStatus[] = [
 ];
 
 export function QueuePage() {
+  const { settings } = useSettings();
   const [operations, setOperations] = useState<QueueOperation[]>(() => queueOperations);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<QueueStatusFilter>('All statuses');
@@ -46,7 +49,9 @@ export function QueuePage() {
   const [operationAnchorId, setOperationAnchorId] = useState<string | null>(null);
   const [selectedAffectedIds, setSelectedAffectedIds] = useState<string[]>([]);
   const [affectedAnchorId, setAffectedAnchorId] = useState<string | null>(null);
-  const [affectedRowsPerPage, setAffectedRowsPerPage] = useState<QueueRowsPerPage>(10);
+  const [affectedRowsPerPage, setAffectedRowsPerPage] = useState<QueueRowsPerPage>(() =>
+    toCompactQueueRowsPerPage(settings.defaultRowsPerPage),
+  );
   const [affectedPage, setAffectedPage] = useState(1);
   const [activeScope, setActiveScope] = useState<QueueActiveScope>('none');
   const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null);
@@ -217,9 +222,7 @@ export function QueuePage() {
           : [...current, operationId],
       );
     } else {
-      setSelectedOperationIds((current) =>
-        current.includes(operationId) ? current.filter((id) => id !== operationId) : [operationId],
-      );
+      setSelectedOperationIds([operationId]);
     }
 
     setOperationAnchorId(operationId);
@@ -242,9 +245,7 @@ export function QueuePage() {
         current.includes(videoId) ? current.filter((id) => id !== videoId) : [...current, videoId],
       );
     } else {
-      setSelectedAffectedIds((current) =>
-        current.includes(videoId) ? current.filter((id) => id !== videoId) : [videoId],
-      );
+      setSelectedAffectedIds([videoId]);
     }
 
     setAffectedAnchorId(videoId);
@@ -315,6 +316,30 @@ export function QueuePage() {
     setDialog(null);
   }
 
+  function requestCancelOperations(operationIds: string[]) {
+    if (settings.confirmDestructiveActions) {
+      setDialog({ type: 'cancelOperations', operationIds });
+    } else {
+      cancelOperations(operationIds);
+    }
+  }
+
+  function requestClearOperations(operationIds: string[]) {
+    if (settings.confirmDestructiveActions) {
+      setDialog({ type: 'removeOperations', operationIds });
+    } else {
+      removeOperations(operationIds);
+    }
+  }
+
+  function requestClearCompleted() {
+    if (settings.confirmDestructiveActions) {
+      setDialog({ type: 'clearCompleted' });
+    } else {
+      clearCompleted();
+    }
+  }
+
   function removeAffectedVideos(operationId: string, videoIds: string[]) {
     const idSet = new Set(videoIds);
     setOperations((current) =>
@@ -345,7 +370,6 @@ export function QueuePage() {
   }
 
   function openOperationContextMenu(operationId: string, x: number, y: number) {
-    const operation = operations.find((item) => item.id === operationId);
     const effectiveIds = getEffectiveOperationIds(operationId);
     const effectiveOperations = operations.filter((item) => effectiveIds.includes(item.id));
     const anyRunnable = effectiveOperations.some((item) => runnableStatuses.includes(item.status));
@@ -368,7 +392,7 @@ export function QueuePage() {
           label: 'Cancel operation',
           disabled: !anyCancellable,
           destructive: true,
-          onSelect: () => setDialog({ type: 'cancelOperations', operationIds: effectiveIds }),
+          onSelect: () => requestCancelOperations(effectiveIds),
         },
         {
           label: 'Retry operation',
@@ -379,14 +403,11 @@ export function QueuePage() {
           label: 'Clear from queue',
           disabled: clearableIds.length === 0,
           destructive: true,
-          onSelect: () => setDialog({ type: 'removeOperations', operationIds: clearableIds }),
+          onSelect: () => requestClearOperations(clearableIds),
         },
       ],
     });
 
-    if (operation) {
-      setDetailOperationId(operation.id);
-    }
   }
 
   function openAffectedContextMenu(videoId: string, x: number, y: number) {
@@ -552,7 +573,7 @@ export function QueuePage() {
             onActivate={() => setActiveScope('queueList')}
             onSelectOperation={selectOperationWithModifiers}
             onOpenContextMenu={openOperationContextMenu}
-            onClearCompleted={() => setDialog({ type: 'clearCompleted' })}
+            onClearCompleted={requestClearCompleted}
           />
           <QueueDetailPanel
             operation={detailOperation}
@@ -564,7 +585,7 @@ export function QueuePage() {
             page={currentAffectedPage}
             totalPages={affectedTotalPages}
             onApplyOperation={(id) => applyOperations([id])}
-            onCancelOperation={(id) => setDialog({ type: 'cancelOperations', operationIds: [id] })}
+            onCancelOperation={(id) => requestCancelOperations([id])}
             onOpenOperationContextMenu={openOperationContextMenu}
             onActivateAffectedTable={() => setActiveScope('queueDetailVideos')}
             onSelectAffectedVideo={selectAffectedWithModifiers}

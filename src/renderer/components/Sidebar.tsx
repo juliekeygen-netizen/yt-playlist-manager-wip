@@ -1,4 +1,4 @@
-import { History, Home, ListMusic, RefreshCw, Settings, TimerReset } from 'lucide-react';
+import { History, Home, ListMusic, RefreshCw, TimerReset } from 'lucide-react';
 import type { AppPage } from '@shared/navigation';
 
 const navItems = [
@@ -6,7 +6,6 @@ const navItems = [
   { label: 'Playlists', icon: ListMusic, page: 'playlists' },
   { label: 'Queue', icon: TimerReset, page: 'queue' },
   { label: 'History', icon: History, page: 'history' },
-  { label: 'Settings', icon: Settings, page: 'settings' },
 ] satisfies Array<{ label: string; icon: typeof Home; page: AppPage }>;
 
 export function Sidebar({

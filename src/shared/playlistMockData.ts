@@ -1,7 +1,7 @@
 export type PlaylistStatus = 'Loaded' | 'Partial' | 'Error';
 export type VideoStatus = 'Public' | 'Unlisted' | 'Private' | 'Deleted' | 'Unavailable';
 export type SortDirection = 'asc' | 'desc';
-export type PlaylistStatusFilter = 'All' | PlaylistStatus;
+export type PlaylistStatusFilter = 'All statuses' | PlaylistStatus;
 export type TargetPlaylistStatusFilter = 'All playlist statuses' | PlaylistStatus;
 export type VideoStatusFilter = 'All statuses' | VideoStatus;
 export type PlaylistSortKey = 'recentlyUpdated' | 'playlistName' | 'videoCount' | 'totalDuration';

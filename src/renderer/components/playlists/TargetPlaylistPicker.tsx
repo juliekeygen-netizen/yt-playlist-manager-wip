@@ -177,7 +177,11 @@ export function TargetPlaylistPicker({
                 role="button"
                 tabIndex={disabled ? -1 : 0}
                 className={`grid min-h-[62px] w-full ${tableGrid} items-center border-b border-white/[0.045] pl-6 pr-6 py-2.5 text-left text-sm transition ${
-                  disabled ? 'cursor-not-allowed opacity-45' : 'hover:bg-white/[0.03]'
+                  disabled
+                    ? 'cursor-not-allowed opacity-45'
+                    : selectedTargetIds.includes(playlist.id)
+                      ? ''
+                      : 'hover:bg-white/[0.03]'
                 } ${selectedTargetIds.includes(playlist.id) ? 'bg-blue-500/[0.08]' : ''}`}
                 title={title}
                 onContextMenu={(event) => {

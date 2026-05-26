@@ -54,7 +54,7 @@ export function AppDialog({
         <div className="flex items-start gap-4">
           <div className="min-w-0 flex-1">
             <h2 className="text-lg font-semibold text-mist-50">{title}</h2>
-            {description && <p className="mt-2 text-sm leading-6 text-mist-400">{description}</p>}
+            {description && <p className="mt-2 whitespace-pre-line text-sm leading-6 text-mist-400">{description}</p>}
           </div>
           <button
             aria-label="Close popup"

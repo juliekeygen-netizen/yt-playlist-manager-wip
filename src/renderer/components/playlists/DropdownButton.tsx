@@ -1,5 +1,6 @@
 import { ChevronDown } from 'lucide-react';
 import { useEffect, useId, useRef, useState, type WheelEvent } from 'react';
+import { useSettings } from '../../contexts/settingsContextValue';
 
 export interface DropdownOption<T extends string | number> {
   label: string;
@@ -25,6 +26,7 @@ export function DropdownButton<T extends string | number>({
   const [open, setOpen] = useState(false);
   const dropdownId = useId();
   const containerRef = useRef<HTMLDivElement>(null);
+  const { settings } = useSettings();
 
   useEffect(() => {
     function closeOnOutsidePointer(event: PointerEvent) {
@@ -58,6 +60,7 @@ export function DropdownButton<T extends string | number>({
   }, [dropdownId]);
 
   function selectByWheel(event: WheelEvent<HTMLDivElement>) {
+    if (!settings.enableDropdownHoverScroll) return;
     if (Math.abs(event.deltaY) < 1) return;
 
     const selectableOptions = options.filter((option) => !option.disabled);

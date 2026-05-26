@@ -1,1 +1,1 @@
-export type AppPage = 'home' | 'playlists' | 'queue' | 'history' | 'settings';
+export type AppPage = 'home' | 'playlists' | 'queue' | 'history';
