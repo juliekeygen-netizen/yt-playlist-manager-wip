@@ -1,11 +1,23 @@
 import { homeActions, mockHomeState } from '@shared/mockData';
+import type { MockSessionInfo } from '@shared/sessionMockData';
 import { QuickActionCard } from '../components/QuickActionCard';
 import { QuickTools } from '../components/QuickTools';
 import { RecentActivity } from '../components/RecentActivity';
 import { RecentPlaylists } from '../components/RecentPlaylists';
 
-export function Dashboard({ onOpenPlaylists }: { onOpenPlaylists?: () => void }) {
-  const actions = homeActions[mockHomeState];
+export function Dashboard({
+  session,
+  previewFirstTime,
+  onOpenPlaylists,
+  onOpenSessionManager,
+}: {
+  session: MockSessionInfo;
+  previewFirstTime: boolean;
+  onOpenPlaylists?: () => void;
+  onOpenSessionManager: () => void;
+}) {
+  const homeState = previewFirstTime || session.state === 'none' ? 'firstTime' : mockHomeState;
+  const actions = homeActions[homeState];
 
   return (
     <div className="mx-auto max-w-[1160px] space-y-5">
@@ -21,7 +33,7 @@ export function Dashboard({ onOpenPlaylists }: { onOpenPlaylists?: () => void })
           <QuickActionCard
             key={action.title}
             action={action}
-            onClick={action.title === 'Open Playlists' ? onOpenPlaylists : undefined}
+            onClick={getActionHandler(action.title, onOpenPlaylists, onOpenSessionManager)}
           />
         ))}
       </section>
@@ -31,4 +43,14 @@ export function Dashboard({ onOpenPlaylists }: { onOpenPlaylists?: () => void })
       <RecentActivity />
     </div>
   );
+}
+
+function getActionHandler(
+  title: string,
+  onOpenPlaylists: (() => void) | undefined,
+  onOpenSessionManager: () => void,
+) {
+  if (title === 'Open Playlists') return onOpenPlaylists;
+  if (title === 'Manage Session' || title === 'Connect YouTube Session') return onOpenSessionManager;
+  return undefined;
 }

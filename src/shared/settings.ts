@@ -36,6 +36,7 @@ export interface AppSettings {
   backupRetention: BackupRetention;
   enableDebugLogs: boolean;
   showInternalIds: boolean;
+  previewFirstTimeHomeUi: boolean;
   enableMockDataMode: boolean;
 }
 
@@ -66,6 +67,7 @@ export const defaultSettings: AppSettings = {
   backupRetention: '30 days',
   enableDebugLogs: false,
   showInternalIds: false,
+  previewFirstTimeHomeUi: false,
   enableMockDataMode: true,
 };
 
@@ -153,6 +155,7 @@ const booleanSettingKeys = [
   'saveRemovedVideoSnapshots',
   'enableDebugLogs',
   'showInternalIds',
+  'previewFirstTimeHomeUi',
   'enableMockDataMode',
 ] satisfies Array<keyof AppSettings>;
 

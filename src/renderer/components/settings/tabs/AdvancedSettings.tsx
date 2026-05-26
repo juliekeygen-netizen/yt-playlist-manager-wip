@@ -33,6 +33,16 @@ export function AdvancedSettings({
           }
         />
         <SettingsRow
+          label="Preview first-time Home UI"
+          description="Mock-only preview for the no-session Home entry state."
+          control={
+            <SettingsToggle
+              checked={settings.previewFirstTimeHomeUi}
+              onChange={(checked) => updateSetting('previewFirstTimeHomeUi', checked)}
+            />
+          }
+        />
+        <SettingsRow
           label="Reset mock data"
           control={<SettingsButton danger onClick={onResetSettings}>Reset mock data</SettingsButton>}
         />

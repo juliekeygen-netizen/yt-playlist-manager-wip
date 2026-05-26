@@ -3,7 +3,8 @@
 interface Window {
   windowControls?: {
     ready: boolean;
-    minimize: () => Promise<void>;
-    close: () => Promise<void>;
+    ping: () => Promise<boolean>;
+    minimize: () => Promise<boolean>;
+    close: () => Promise<boolean>;
   };
 }

@@ -2,8 +2,13 @@ import { CircleHelp, Minus, Settings, X } from 'lucide-react';
 import type { CSSProperties } from 'react';
 
 export function TitleBar({ onOpenSettings }: { onOpenSettings: () => void }) {
-  const noDragStyle = { WebkitAppRegion: 'no-drag' } as CSSProperties;
-  const runWindowControl = (action: 'minimize' | 'close') => {
+  const noDragStyle = { WebkitAppRegion: 'no-drag', appRegion: 'no-drag' } as CSSProperties & {
+    appRegion: string;
+  };
+  const dragStyle = { WebkitAppRegion: 'drag', appRegion: 'drag' } as CSSProperties & {
+    appRegion: string;
+  };
+  const runWindowControl = async (action: 'minimize' | 'close') => {
     const controls = window.windowControls;
 
     if (!controls?.ready) {
@@ -11,11 +16,26 @@ export function TitleBar({ onOpenSettings }: { onOpenSettings: () => void }) {
       return;
     }
 
-    void controls[action]();
+    try {
+      const ready = await controls.ping();
+      if (!ready) {
+        console.warn(`Window controls bridge responded, but no BrowserWindow was resolved for ${action}.`);
+        return;
+      }
+      const success = await controls[action]();
+      if (!success) {
+        console.warn(`Window ${action} IPC returned false.`);
+      }
+    } catch (error) {
+      console.warn(`Window ${action} IPC failed.`, error);
+    }
   };
 
   return (
-    <header className="drag-region flex h-14 shrink-0 items-center justify-between border-b border-white/[0.08] bg-shell-950/80 px-7 backdrop-blur-xl">
+    <header
+      className="drag-region flex h-14 shrink-0 items-center justify-between border-b border-white/[0.08] bg-shell-950/80 px-7 backdrop-blur-xl"
+      style={dragStyle}
+    >
       <div className="flex items-center gap-3">
         <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-red-500 to-red-700 shadow-lg shadow-red-950/50">
           <span className="ml-0.5 h-0 w-0 border-y-[5px] border-l-[8px] border-y-transparent border-l-white" />
@@ -43,7 +63,7 @@ export function TitleBar({ onOpenSettings }: { onOpenSettings: () => void }) {
           <button
             aria-label="Minimize window"
             className="no-drag rounded-md p-2 transition hover:bg-white/7 hover:text-white"
-            onClick={() => runWindowControl('minimize')}
+            onClick={() => void runWindowControl('minimize')}
             onMouseDown={(event) => event.stopPropagation()}
             onPointerDown={(event) => event.stopPropagation()}
             style={noDragStyle}
@@ -54,7 +74,7 @@ export function TitleBar({ onOpenSettings }: { onOpenSettings: () => void }) {
           <button
             aria-label="Close window"
             className="no-drag rounded-md p-2 transition hover:bg-red-500/20 hover:text-red-100"
-            onClick={() => runWindowControl('close')}
+            onClick={() => void runWindowControl('close')}
             onMouseDown={(event) => event.stopPropagation()}
             onPointerDown={(event) => event.stopPropagation()}
             style={noDragStyle}

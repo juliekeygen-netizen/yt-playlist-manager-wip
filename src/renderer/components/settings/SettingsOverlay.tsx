@@ -42,11 +42,12 @@ export function SettingsOverlay({ onClose }: { onClose: () => void }) {
 
   return (
     <div
-      className="fixed inset-0 z-[90] flex items-center justify-center bg-shell-950/72 px-5 py-7 backdrop-blur-md"
+      className="fixed inset-0 z-[90] flex items-center justify-center bg-[#071523]/62 px-5 py-7 backdrop-blur-[10px]"
       onMouseDown={onClose}
-    >
+     >
+<div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_42%,rgba(96,165,250,0.014),transparent_60rem),radial-gradient(circle_at_42%_58%,rgba(20,184,166,0.010),transparent_56rem),radial-gradient(circle_at_58%_62%,rgba(244,114,182,0.006),transparent_52rem)]" />
       <div
-        className="flex h-[min(760px,calc(100vh-56px))] w-[min(940px,calc(100vw-56px))] flex-col overflow-hidden rounded-xl border border-white/[0.15] bg-[#081423]/94 shadow-[0_24px_90px_rgba(0,0,0,0.62),0_0_55px_rgba(59,130,246,0.14)] backdrop-blur-2xl"
+        className="relative z-10 flex h-[min(760px,calc(100vh-56px))] w-[min(940px,calc(100vw-56px))] flex-col overflow-hidden rounded-xl border border-white/[0.18] bg-[#071421]/96 shadow-[0_10px_24px_rgba(0,0,0,0.50)] backdrop-blur-md"
         onMouseDown={(event) => event.stopPropagation()}
       >
         <header className="flex h-[70px] shrink-0 items-center justify-between border-b border-white/[0.08] px-7">

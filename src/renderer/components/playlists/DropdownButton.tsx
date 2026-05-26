@@ -1,5 +1,5 @@
 import { ChevronDown } from 'lucide-react';
-import { useEffect, useId, useLayoutEffect, useRef, useState, type WheelEvent } from 'react';
+import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
 import { useSettings } from '../../contexts/settingsContextValue';
 
 export interface DropdownOption<T extends string | number> {
@@ -90,29 +90,44 @@ export function DropdownButton<T extends string | number>({
     return () => cancelAnimationFrame(frameId);
   }, [open]);
 
-  function selectByWheel(event: WheelEvent<HTMLDivElement>) {
-    if (!settings.enableDropdownHoverScroll) return;
-    if (Math.abs(event.deltaY) < 1) return;
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return undefined;
 
-    event.preventDefault();
-    event.stopPropagation();
+    function selectByWheelDelta(deltaY: number) {
+      if (!settings.enableDropdownHoverScroll) return;
+      if (Math.abs(deltaY) < 1) return;
 
-    const selectableOptions = options.filter((option) => !option.disabled);
-    if (selectableOptions.length < 2) return;
+      const selectableOptions = options.filter((option) => !option.disabled);
+      if (selectableOptions.length < 2) return;
 
-    const direction = event.deltaY > 0 ? 1 : -1;
-    const currentIndex = selectableOptions.findIndex((option) => Object.is(option.value, value));
-    const fallbackIndex = direction > 0 ? 0 : selectableOptions.length - 1;
-    const nextIndex =
-      currentIndex === -1
-        ? fallbackIndex
-        : (currentIndex + direction + selectableOptions.length) % selectableOptions.length;
-    const nextOption = selectableOptions[nextIndex];
+      const direction = deltaY > 0 ? 1 : -1;
+      const currentIndex = selectableOptions.findIndex((option) => Object.is(option.value, value));
+      const fallbackIndex = direction > 0 ? 0 : selectableOptions.length - 1;
+      const nextIndex =
+        currentIndex === -1
+          ? fallbackIndex
+          : (currentIndex + direction + selectableOptions.length) % selectableOptions.length;
+      const nextOption = selectableOptions[nextIndex];
 
-    if (!Object.is(nextOption.value, value)) {
-      onSelect(nextOption.value);
+      if (!Object.is(nextOption.value, value)) {
+        onSelect(nextOption.value);
+      }
     }
-  }
+
+    function handleNativeWheel(event: WheelEvent) {
+      if (!settings.enableDropdownHoverScroll) return;
+      if (Math.abs(event.deltaY) < 1) return;
+
+      event.preventDefault();
+      event.stopPropagation();
+      event.stopImmediatePropagation();
+      selectByWheelDelta(event.deltaY);
+    }
+
+    container.addEventListener('wheel', handleNativeWheel, { passive: false });
+    return () => container.removeEventListener('wheel', handleNativeWheel);
+  }, [onSelect, options, settings.enableDropdownHoverScroll, value]);
 
   return (
     <div
@@ -120,7 +135,6 @@ export function DropdownButton<T extends string | number>({
       className={`relative ${className}`}
       data-dropdown-open={open ? 'true' : 'false'}
       data-dropdown-root
-      onWheelCapture={selectByWheel}
     >
       <button
         className={`flex h-10 w-full items-center justify-between gap-3 rounded-md border px-4 text-sm text-mist-200 transition ${
@@ -146,7 +160,7 @@ export function DropdownButton<T extends string | number>({
           ref={menuRef}
           className={`absolute right-0 z-50 min-w-full overflow-hidden rounded-md border shadow-glow backdrop-blur-xl ${
             variant === 'settings'
-              ? 'border-white/[0.11] bg-shell-800/96'
+              ? 'border-white/[0.13] bg-[#0c1b2d]/92 shadow-[0_18px_46px_rgba(0,0,0,0.48)]'
               : 'border-white/[0.09] bg-shell-900/95'
           } ${
             placement === 'top' ? 'bottom-11' : 'top-11'

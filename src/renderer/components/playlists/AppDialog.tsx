@@ -43,7 +43,7 @@ export function AppDialog({
   }, [onClose]);
 
   return (
-    <div className="fixed inset-0 z-[70] flex items-center justify-center bg-shell-950/35 px-5 backdrop-blur-sm">
+    <div className="fixed inset-0 z-[120] flex items-center justify-center bg-shell-950/35 px-5 backdrop-blur-sm">
       <form
         className="w-full max-w-[440px] rounded-xl border border-white/[0.10] bg-shell-900/94 p-5 shadow-glow backdrop-blur-xl"
         onSubmit={(event) => {

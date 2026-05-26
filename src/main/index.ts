@@ -1,4 +1,5 @@
 import { app, BrowserWindow, ipcMain } from 'electron';
+import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 
 let mainWindow: BrowserWindow | null = null;
@@ -14,7 +15,7 @@ function createWindow(): void {
     title: 'YT Playlist Manager',
     show: false,
     webPreferences: {
-      preload: join(__dirname, '../preload/index.mjs'),
+      preload: getPreloadPath(),
       contextIsolation: true,
       nodeIntegration: false,
     },
@@ -49,10 +50,34 @@ app.on('window-all-closed', () => {
 
 ipcMain.handle('window:minimize', (event) => {
   const window = BrowserWindow.fromWebContents(event.sender) ?? mainWindow;
-  window?.minimize();
+  if (!window) {
+    console.warn('window:minimize failed: no BrowserWindow resolved.');
+    return false;
+  }
+  window.minimize();
+  return true;
 });
 
 ipcMain.handle('window:close', (event) => {
   const window = BrowserWindow.fromWebContents(event.sender) ?? mainWindow;
-  window?.close();
+  if (!window) {
+    console.warn('window:close failed: no BrowserWindow resolved.');
+    return false;
+  }
+  window.close();
+  return true;
 });
+
+ipcMain.handle('window:controls-ready', (event) => Boolean(BrowserWindow.fromWebContents(event.sender) ?? mainWindow));
+
+function getPreloadPath() {
+  const candidates = [
+    join(__dirname, '../preload/index.mjs'),
+    join(__dirname, '../preload/index.js'),
+  ];
+  const found = candidates.find((candidate) => existsSync(candidate));
+  if (!found) {
+    console.warn(`No preload bundle found. Tried: ${candidates.join(', ')}`);
+  }
+  return found ?? candidates[0];
+}
