@@ -96,6 +96,7 @@ export function SafetyBackupsSettings({ onNotImplemented }: { onNotImplemented: 
           label="Backup retention"
           control={
             <DropdownButton
+              variant="settings"
               label={settings.backupRetention}
               options={backupRetentionOptions}
               value={settings.backupRetention}

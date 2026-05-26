@@ -2,7 +2,7 @@ import type { VideoStatus } from './playlistMockData';
 
 export type HistoryState = 'Undoable' | 'Recoverable' | 'Restored' | 'Expired' | 'Cleared';
 export type HistoryFilter = 'All history' | 'Undoable' | 'Recoverable' | 'Restored';
-export type HistorySortKey = 'newest' | 'oldest' | 'actionType' | 'playlistTitle' | 'recoveryState';
+export type HistorySortKey = 'date' | 'playlistTitle' | 'recoveryState';
 export type HistoryRowsPerPage = 10 | 25 | 50 | 'All';
 export type HistoryEventType =
   | 'Move videos'

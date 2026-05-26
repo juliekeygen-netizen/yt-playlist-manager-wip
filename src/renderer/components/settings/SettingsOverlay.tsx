@@ -1,6 +1,5 @@
 import { Settings, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import type { SettingsTabId } from '@shared/settings';
 import { useSettings } from '../../contexts/settingsContextValue';
 import { SettingsPanel } from './SettingsPanel';
 import { SettingsSidebar } from './SettingsSidebar';
@@ -15,9 +14,8 @@ type OverlayDialog =
   | { type: 'resetSettings' };
 
 export function SettingsOverlay({ onClose }: { onClose: () => void }) {
-  const [activeTab, setActiveTab] = useState<SettingsTabId>('general');
   const [dialog, setDialog] = useState<OverlayDialog | null>(null);
-  const { resetSettings } = useSettings();
+  const { activeSettingsTab, resetSettings, setActiveSettingsTab } = useSettings();
 
   useEffect(() => {
     function closeOnEscape(event: KeyboardEvent) {
@@ -44,11 +42,11 @@ export function SettingsOverlay({ onClose }: { onClose: () => void }) {
 
   return (
     <div
-      className="fixed inset-0 z-[90] flex items-center justify-center bg-shell-950/58 px-5 py-7 backdrop-blur-md"
+      className="fixed inset-0 z-[90] flex items-center justify-center bg-shell-950/72 px-5 py-7 backdrop-blur-md"
       onMouseDown={onClose}
     >
       <div
-        className="flex h-[min(760px,calc(100vh-56px))] w-[min(940px,calc(100vw-56px))] flex-col overflow-hidden rounded-xl border border-white/[0.13] bg-shell-900/88 shadow-[0_24px_90px_rgba(0,0,0,0.52),0_0_50px_rgba(59,130,246,0.10)] backdrop-blur-2xl"
+        className="flex h-[min(760px,calc(100vh-56px))] w-[min(940px,calc(100vw-56px))] flex-col overflow-hidden rounded-xl border border-white/[0.15] bg-[#081423]/94 shadow-[0_24px_90px_rgba(0,0,0,0.62),0_0_55px_rgba(59,130,246,0.14)] backdrop-blur-2xl"
         onMouseDown={(event) => event.stopPropagation()}
       >
         <header className="flex h-[70px] shrink-0 items-center justify-between border-b border-white/[0.08] px-7">
@@ -67,20 +65,20 @@ export function SettingsOverlay({ onClose }: { onClose: () => void }) {
         </header>
 
         <div className="flex min-h-0 flex-1">
-          <SettingsSidebar activeTab={activeTab} onSelectTab={setActiveTab} />
+          <SettingsSidebar activeTab={activeSettingsTab} onSelectTab={setActiveSettingsTab} />
           <SettingsPanel>
-            {activeTab === 'general' && <GeneralSettings />}
-            {activeTab === 'queueHistory' && <QueueHistorySettings />}
-            {activeTab === 'safetyBackups' && (
+            {activeSettingsTab === 'general' && <GeneralSettings />}
+            {activeSettingsTab === 'queueHistory' && <QueueHistorySettings />}
+            {activeSettingsTab === 'safetyBackups' && (
               <SafetyBackupsSettings onNotImplemented={showNotImplemented} />
             )}
-            {activeTab === 'advanced' && (
+            {activeSettingsTab === 'advanced' && (
               <AdvancedSettings
                 onNotImplemented={showNotImplemented}
                 onResetSettings={() => setDialog({ type: 'resetSettings' })}
               />
             )}
-            {activeTab === 'about' && <AboutSettings onNotImplemented={showNotImplemented} />}
+            {activeSettingsTab === 'about' && <AboutSettings onNotImplemented={showNotImplemented} />}
           </SettingsPanel>
         </div>
       </div>

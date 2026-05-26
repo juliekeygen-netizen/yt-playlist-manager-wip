@@ -7,6 +7,7 @@ import {
   type HistorySortKey,
   type HistoryState,
 } from '@shared/historyMockData';
+import type { SortDirection } from '@shared/playlistMockData';
 import { toCompactHistoryRowsPerPage } from '@shared/settings';
 import { AppDialog } from '../components/playlists/AppDialog';
 import { ContextMenu, type ContextMenuState } from '../components/playlists/ContextMenu';
@@ -38,7 +39,8 @@ export function HistoryPage() {
   const [events, setEvents] = useState<HistoryEvent[]>(() => historyEvents);
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<HistoryFilter>('All history');
-  const [sortKey, setSortKey] = useState<HistorySortKey>('newest');
+  const [sortKey, setSortKey] = useState<HistorySortKey>('date');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
   const [selectedEventId, setSelectedEventId] = useState<string | null>('history-deleted-archive');
   const [selectedHistoryIds, setSelectedHistoryIds] = useState<string[]>([]);
   const [historyAnchorId, setHistoryAnchorId] = useState<string | null>(null);
@@ -74,8 +76,8 @@ export function HistoryPage() {
       return matchesSearch && matchesFilter;
     });
 
-    return sortEvents(filtered, sortKey);
-  }, [events, filter, search, sortKey]);
+    return sortEvents(filtered, sortKey, sortDirection);
+  }, [events, filter, search, sortDirection, sortKey]);
 
   const selectedEvent = useMemo(
     () => events.find((event) => event.id === selectedEventId),
@@ -243,6 +245,15 @@ export function HistoryPage() {
     setSelectedSavedIds(allSelected ? [] : savedIds);
   }
 
+  function updateSort(nextSortKey: HistorySortKey) {
+    if (nextSortKey === sortKey) {
+      setSortDirection((current) => (current === 'asc' ? 'desc' : 'asc'));
+    } else {
+      setSortKey(nextSortKey);
+      setSortDirection(nextSortKey === 'date' ? 'desc' : 'asc');
+    }
+  }
+
   function markEventRestored(eventId: string) {
     setEvents((current) =>
       current.map((event) =>
@@ -355,10 +366,6 @@ export function HistoryPage() {
               label: primaryLabel,
               disabled: primaryDisabled,
               onSelect: () => requestPrimaryAction(eventId),
-            },
-            {
-              label: 'Export backup',
-              onSelect: () => showNotImplemented('Export backup'),
             },
             {
               label: 'Clear from history',
@@ -497,6 +504,7 @@ export function HistoryPage() {
           search={search}
           filter={filter}
           sortKey={sortKey}
+          sortDirection={sortDirection}
           clearDisabled={clearOldDisabled}
           onSearchChange={(value) => {
             setSearch(value);
@@ -506,7 +514,7 @@ export function HistoryPage() {
             setFilter(value);
             setSelectedSavedIds([]);
           }}
-          onSortChange={setSortKey}
+          onSortChange={updateSort}
           onClearOldHistory={requestClearOldHistory}
         />
 
@@ -552,13 +560,15 @@ export function HistoryPage() {
   );
 }
 
-function sortEvents(events: HistoryEvent[], sortKey: HistorySortKey) {
+function sortEvents(events: HistoryEvent[], sortKey: HistorySortKey, direction: SortDirection) {
+  const directionMultiplier = direction === 'asc' ? 1 : -1;
+
   return [...events].sort((a, b) => {
-    if (sortKey === 'oldest') return a.createdOrder - b.createdOrder;
-    if (sortKey === 'actionType') return a.type.localeCompare(b.type);
-    if (sortKey === 'playlistTitle') return a.playlistTitle.localeCompare(b.playlistTitle);
-    if (sortKey === 'recoveryState') return stateSortOrder.indexOf(a.state) - stateSortOrder.indexOf(b.state);
-    return b.createdOrder - a.createdOrder;
+    if (sortKey === 'playlistTitle') return a.playlistTitle.localeCompare(b.playlistTitle) * directionMultiplier;
+    if (sortKey === 'recoveryState') {
+      return (stateSortOrder.indexOf(a.state) - stateSortOrder.indexOf(b.state)) * directionMultiplier;
+    }
+    return (a.createdOrder - b.createdOrder) * directionMultiplier;
   });
 }
 

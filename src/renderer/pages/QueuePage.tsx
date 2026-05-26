@@ -9,6 +9,7 @@ import {
   type QueueStatusFilter,
   type QueueTypeFilter,
 } from '@shared/queueMockData';
+import type { SortDirection } from '@shared/playlistMockData';
 import { toCompactQueueRowsPerPage } from '@shared/settings';
 import { AppDialog } from '../components/playlists/AppDialog';
 import { ContextMenu, type ContextMenuState } from '../components/playlists/ContextMenu';
@@ -43,7 +44,8 @@ export function QueuePage() {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<QueueStatusFilter>('All statuses');
   const [typeFilter, setTypeFilter] = useState<QueueTypeFilter>('All types');
-  const [sortKey, setSortKey] = useState<QueueSortKey>('newest');
+  const [sortKey, setSortKey] = useState<QueueSortKey>('date');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
   const [detailOperationId, setDetailOperationId] = useState<string | null>(queueOperations[0]?.id ?? null);
   const [selectedOperationIds, setSelectedOperationIds] = useState<string[]>([]);
   const [operationAnchorId, setOperationAnchorId] = useState<string | null>(null);
@@ -78,8 +80,8 @@ export function QueuePage() {
       return matchesSearch && matchesStatus && matchesType;
     });
 
-    return sortOperations(filtered, sortKey);
-  }, [operations, search, sortKey, statusFilter, typeFilter]);
+    return sortOperations(filtered, sortKey, sortDirection);
+  }, [operations, search, sortDirection, sortKey, statusFilter, typeFilter]);
 
   const detailOperation = useMemo(
     () => operations.find((operation) => operation.id === detailOperationId),
@@ -361,6 +363,15 @@ export function QueuePage() {
     applyOperations(visibleOperations.map((operation) => operation.id));
   }
 
+  function updateSort(nextSortKey: QueueSortKey) {
+    if (nextSortKey === sortKey) {
+      setSortDirection((current) => (current === 'asc' ? 'desc' : 'asc'));
+    } else {
+      setSortKey(nextSortKey);
+      setSortDirection(nextSortKey === 'date' ? 'desc' : 'asc');
+    }
+  }
+
   function getEffectiveOperationIds(operationId: string) {
     return selectedOperationIds.includes(operationId) ? selectedOperationIds : [operationId];
   }
@@ -389,15 +400,15 @@ export function QueuePage() {
           onSelect: () => applyOperations(effectiveIds),
         },
         {
+          label: 'Retry operation',
+          disabled: !anyFailed,
+          onSelect: () => retryOperations(effectiveIds),
+        },
+        {
           label: 'Cancel operation',
           disabled: !anyCancellable,
           destructive: true,
           onSelect: () => requestCancelOperations(effectiveIds),
-        },
-        {
-          label: 'Retry operation',
-          disabled: !anyFailed,
-          onSelect: () => retryOperations(effectiveIds),
         },
         {
           label: 'Clear from queue',
@@ -547,6 +558,7 @@ export function QueuePage() {
           statusFilter={statusFilter}
           typeFilter={typeFilter}
           sortKey={sortKey}
+          sortDirection={sortDirection}
           runAllDisabled={runnableVisibleCount === 0}
           onSearchChange={(value) => {
             setSearch(value);
@@ -560,7 +572,7 @@ export function QueuePage() {
             setTypeFilter(value);
             setSelectedOperationIds([]);
           }}
-          onSortChange={setSortKey}
+          onSortChange={updateSort}
           onRunAll={runAllVisible}
         />
 
@@ -606,14 +618,16 @@ export function QueuePage() {
   );
 }
 
-function sortOperations(operations: QueueOperation[], sortKey: QueueSortKey) {
+function sortOperations(operations: QueueOperation[], sortKey: QueueSortKey, direction: SortDirection) {
+  const directionMultiplier = direction === 'asc' ? 1 : -1;
+
   return [...operations].sort((a, b) => {
-    if (sortKey === 'oldest') return a.createdOrder - b.createdOrder;
-    if (sortKey === 'status') return statusSortOrder.indexOf(a.status) - statusSortOrder.indexOf(b.status);
-    if (sortKey === 'type') return a.type.localeCompare(b.type);
-    if (sortKey === 'source') return a.source.localeCompare(b.source);
-    if (sortKey === 'target') return (a.target ?? a.targetSummary ?? '').localeCompare(b.target ?? b.targetSummary ?? '');
-    return b.createdOrder - a.createdOrder;
+    if (sortKey === 'status') {
+      return (statusSortOrder.indexOf(a.status) - statusSortOrder.indexOf(b.status)) * directionMultiplier;
+    }
+    if (sortKey === 'type') return a.type.localeCompare(b.type) * directionMultiplier;
+    if (sortKey === 'source') return a.source.localeCompare(b.source) * directionMultiplier;
+    return (a.createdOrder - b.createdOrder) * directionMultiplier;
   });
 }
 

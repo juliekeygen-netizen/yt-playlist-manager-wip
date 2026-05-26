@@ -50,6 +50,7 @@ export function QueueHistorySettings() {
           label="Copy or move videos"
           control={
             <DropdownButton
+              variant="settings"
               label={actionModeLabels[settings.copyMoveActionMode]}
               options={actionModeOptions}
               value={settings.copyMoveActionMode}
@@ -61,6 +62,7 @@ export function QueueHistorySettings() {
           label="Remove videos"
           control={
             <DropdownButton
+              variant="settings"
               label={actionModeLabels[settings.removeVideosActionMode]}
               options={actionModeOptions}
               value={settings.removeVideosActionMode}
@@ -72,6 +74,7 @@ export function QueueHistorySettings() {
           label="Delete playlists"
           control={
             <DropdownButton
+              variant="settings"
               label={actionModeLabels[settings.deletePlaylistsActionMode]}
               options={actionModeOptions}
               value={settings.deletePlaylistsActionMode}
@@ -83,6 +86,7 @@ export function QueueHistorySettings() {
           label="Reorder playlist"
           control={
             <DropdownButton
+              variant="settings"
               label={actionModeLabels[settings.reorderPlaylistActionMode]}
               options={actionModeOptions}
               value={settings.reorderPlaylistActionMode}
@@ -97,6 +101,7 @@ export function QueueHistorySettings() {
           label="Auto-clear completed and cancelled operations after"
           control={
             <DropdownButton
+              variant="settings"
               label={settings.autoClearCompletedOperationsAfter}
               options={completedCleanupOptions}
               value={settings.autoClearCompletedOperationsAfter}
@@ -108,6 +113,7 @@ export function QueueHistorySettings() {
           label="Auto-clear all operations after"
           control={
             <DropdownButton
+              variant="settings"
               label={settings.autoClearAllOperationsAfter}
               options={allOperationsCleanupOptions}
               value={settings.autoClearAllOperationsAfter}
@@ -122,6 +128,7 @@ export function QueueHistorySettings() {
           label="Auto-clear history after"
           control={
             <DropdownButton
+              variant="settings"
               label={settings.autoClearHistoryAfter}
               options={historyCleanupOptions}
               value={settings.autoClearHistoryAfter}
@@ -133,6 +140,7 @@ export function QueueHistorySettings() {
           label="Auto-clear restored items after"
           control={
             <DropdownButton
+              variant="settings"
               label={settings.autoClearRestoredItemsAfter}
               options={completedCleanupOptions}
               value={settings.autoClearRestoredItemsAfter}

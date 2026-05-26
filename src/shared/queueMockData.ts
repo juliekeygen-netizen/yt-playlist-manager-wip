@@ -9,12 +9,10 @@ export type QueueOperationType =
 export type QueueStatusFilter = 'All statuses' | QueueStatus;
 export type QueueTypeFilter = 'All types' | QueueOperationType;
 export type QueueSortKey =
-  | 'newest'
-  | 'oldest'
+  | 'date'
   | 'status'
   | 'type'
-  | 'source'
-  | 'target';
+  | 'source';
 export type QueueRowsPerPage = 10 | 25 | 50 | 'All';
 
 export interface QueueAffectedVideo {

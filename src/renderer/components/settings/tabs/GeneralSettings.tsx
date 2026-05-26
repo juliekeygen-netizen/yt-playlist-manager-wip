@@ -71,6 +71,7 @@ export function GeneralSettings() {
           label="Default rows per page"
           control={
             <DropdownButton
+              variant="settings"
               label={String(settings.defaultRowsPerPage)}
               options={rowsPerPageOptions}
               value={settings.defaultRowsPerPage}
@@ -83,6 +84,7 @@ export function GeneralSettings() {
           label="Default playlist sort"
           control={
             <DropdownButton
+              variant="settings"
               label={playlistSortOptions.find((option) => option.value === settings.defaultPlaylistSort)?.label ?? 'Recently updated'}
               options={playlistSortOptions}
               value={settings.defaultPlaylistSort}
@@ -95,6 +97,7 @@ export function GeneralSettings() {
           label="Default video sort"
           control={
             <DropdownButton
+              variant="settings"
               label={videoSortOptions.find((option) => option.value === settings.defaultVideoSort)?.label ?? 'Date added'}
               options={videoSortOptions}
               value={settings.defaultVideoSort}

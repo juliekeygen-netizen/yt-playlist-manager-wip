@@ -1,5 +1,6 @@
 import { Search, Trash2 } from 'lucide-react';
 import type { HistoryFilter, HistorySortKey } from '@shared/historyMockData';
+import type { SortDirection } from '@shared/playlistMockData';
 import { DropdownButton } from '../playlists/DropdownButton';
 
 const filterOptions = [
@@ -10,17 +11,13 @@ const filterOptions = [
 ] satisfies Array<{ label: string; value: HistoryFilter }>;
 
 const sortOptions = [
-  { label: 'Newest first', value: 'newest' },
-  { label: 'Oldest first', value: 'oldest' },
-  { label: 'Action type', value: 'actionType' },
+  { label: 'By date', value: 'date' },
   { label: 'Playlist title', value: 'playlistTitle' },
   { label: 'Recovery state', value: 'recoveryState' },
 ] satisfies Array<{ label: string; value: HistorySortKey }>;
 
 const sortLabels: Record<HistorySortKey, string> = {
-  newest: 'Newest first',
-  oldest: 'Oldest first',
-  actionType: 'Action type',
+  date: 'By date',
   playlistTitle: 'Playlist title',
   recoveryState: 'Recovery state',
 };
@@ -29,6 +26,7 @@ export function HistoryToolbar({
   search,
   filter,
   sortKey,
+  sortDirection,
   clearDisabled,
   onSearchChange,
   onFilterChange,
@@ -38,6 +36,7 @@ export function HistoryToolbar({
   search: string;
   filter: HistoryFilter;
   sortKey: HistorySortKey;
+  sortDirection: SortDirection;
   clearDisabled: boolean;
   onSearchChange: (value: string) => void;
   onFilterChange: (value: HistoryFilter) => void;
@@ -64,7 +63,7 @@ export function HistoryToolbar({
       />
       <DropdownButton
         className="w-[220px]"
-        label={`Sort: ${sortLabels[sortKey]}`}
+        label={`Sort: ${sortLabels[sortKey]} ${sortDirection === 'asc' ? '↑' : '↓'}`}
         options={sortOptions}
         value={sortKey}
         onSelect={onSortChange}

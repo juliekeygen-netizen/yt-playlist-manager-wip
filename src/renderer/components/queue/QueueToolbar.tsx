@@ -4,6 +4,7 @@ import type {
   QueueStatusFilter,
   QueueTypeFilter,
 } from '@shared/queueMockData';
+import type { SortDirection } from '@shared/playlistMockData';
 import { DropdownButton } from '../playlists/DropdownButton';
 
 const statusOptions = [
@@ -27,21 +28,17 @@ const typeOptions = [
 ] satisfies Array<{ label: string; value: QueueTypeFilter }>;
 
 const sortOptions = [
-  { label: 'Newest first', value: 'newest' },
-  { label: 'Oldest first', value: 'oldest' },
-  { label: 'Status', value: 'status' },
+  { label: 'By date', value: 'date' },
+  { label: 'Queue status', value: 'status' },
   { label: 'Operation type', value: 'type' },
-  { label: 'Source playlist', value: 'source' },
-  { label: 'Target playlist', value: 'target' },
+  { label: 'Playlist title', value: 'source' },
 ] satisfies Array<{ label: string; value: QueueSortKey }>;
 
 const sortLabels: Record<QueueSortKey, string> = {
-  newest: 'Newest first',
-  oldest: 'Oldest first',
-  status: 'Status',
+  date: 'By date',
+  status: 'Queue status',
   type: 'Operation type',
-  source: 'Source playlist',
-  target: 'Target playlist',
+  source: 'Playlist title',
 };
 
 export function QueueToolbar({
@@ -49,6 +46,7 @@ export function QueueToolbar({
   statusFilter,
   typeFilter,
   sortKey,
+  sortDirection,
   runAllDisabled,
   onSearchChange,
   onStatusFilterChange,
@@ -60,6 +58,7 @@ export function QueueToolbar({
   statusFilter: QueueStatusFilter;
   typeFilter: QueueTypeFilter;
   sortKey: QueueSortKey;
+  sortDirection: SortDirection;
   runAllDisabled: boolean;
   onSearchChange: (value: string) => void;
   onStatusFilterChange: (value: QueueStatusFilter) => void;
@@ -94,7 +93,7 @@ export function QueueToolbar({
       />
       <DropdownButton
         className="w-[220px]"
-        label={`Sort: ${sortLabels[sortKey]}`}
+        label={`Sort: ${sortLabels[sortKey]} ${sortDirection === 'asc' ? '↑' : '↓'}`}
         options={sortOptions}
         value={sortKey}
         onSelect={onSortChange}
