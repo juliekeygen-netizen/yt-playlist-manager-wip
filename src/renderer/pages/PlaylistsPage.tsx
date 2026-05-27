@@ -1008,6 +1008,8 @@ export function PlaylistsPage() {
             onSelectVideo={selectVideoWithModifiers}
             onOpenVideoContextMenu={openVideoContextMenu}
             onOpenPlaylistContextMenu={openPlaylistContextMenu}
+            onOpenExportPlaylist={() => setDialog({ type: 'exportPlaylist', playlistId: selectedPlaylist.id })}
+            onOpenPlaylistStats={() => setDialog({ type: 'playlistStats', playlistId: selectedPlaylist.id })}
             onToggleAllFiltered={toggleAllFilteredVideos}
             onRowsPerPageChange={updateRowsPerPage}
             onPreviousPage={() => setPage((current) => Math.max(1, current - 1))}

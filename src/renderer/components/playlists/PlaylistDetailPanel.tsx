@@ -35,6 +35,8 @@ export function PlaylistDetailPanel({
   onSelectVideo,
   onOpenVideoContextMenu,
   onOpenPlaylistContextMenu,
+  onOpenExportPlaylist,
+  onOpenPlaylistStats,
   onToggleAllFiltered,
   onRowsPerPageChange,
   onPreviousPage,
@@ -70,6 +72,8 @@ export function PlaylistDetailPanel({
   onSelectVideo: (id: string, modifiers: SelectionModifiers, visibleVideoIds: string[]) => void;
   onOpenVideoContextMenu: (videoId: string, x: number, y: number) => void;
   onOpenPlaylistContextMenu: (playlistId: string, x: number, y: number) => void;
+  onOpenExportPlaylist: () => void;
+  onOpenPlaylistStats: () => void;
   onToggleAllFiltered: () => void;
   onRowsPerPageChange: (value: RowsPerPage) => void;
   onPreviousPage: () => void;
@@ -101,7 +105,11 @@ export function PlaylistDetailPanel({
           </div>
         </div>
         <div className="ml-auto flex items-center gap-2">
-          <button className="flex h-10 items-center gap-2 rounded-md border border-white/[0.09] bg-white/[0.035] px-4 text-sm text-mist-100 transition hover:bg-white/[0.07]">
+          <button
+            className="flex h-10 items-center gap-2 rounded-md border border-white/[0.09] bg-white/[0.035] px-4 text-sm text-mist-100 transition hover:bg-white/[0.07]"
+            onClick={onOpenExportPlaylist}
+            type="button"
+          >
             <Upload size={17} />
             Export
           </button>
@@ -123,6 +131,7 @@ export function PlaylistDetailPanel({
         onSearchChange={onVideoSearchChange}
         onStatusFilterChange={onVideoStatusFilterChange}
         onSortSelect={onVideoSortSelect}
+        onOpenStats={onOpenPlaylistStats}
       />
       {removeConfirmActive ? (
         <RemoveConfirmation

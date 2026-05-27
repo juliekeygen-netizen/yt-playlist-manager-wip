@@ -38,6 +38,7 @@ export function VideoToolbar({
   onSearchChange,
   onStatusFilterChange,
   onSortSelect,
+  onOpenStats,
 }: {
   search: string;
   statusFilter: VideoStatusFilter;
@@ -46,6 +47,7 @@ export function VideoToolbar({
   onSearchChange: (value: string) => void;
   onStatusFilterChange: (value: VideoStatusFilter) => void;
   onSortSelect: (value: VideoSortKey) => void;
+  onOpenStats: () => void;
 }) {
   return (
     <section className="flex shrink-0 items-center gap-3 border-t border-white/[0.055] px-4 py-3">
@@ -73,7 +75,11 @@ export function VideoToolbar({
         value={sortKey}
         onSelect={onSortSelect}
       />
-      <button className="ml-auto flex h-10 items-center gap-2 rounded-md border border-white/[0.09] bg-white/[0.035] px-4 text-sm text-mist-100 transition hover:bg-white/[0.07]">
+      <button
+        className="ml-auto flex h-10 items-center gap-2 rounded-md border border-white/[0.09] bg-white/[0.035] px-4 text-sm text-mist-100 transition hover:bg-white/[0.07]"
+        onClick={onOpenStats}
+        type="button"
+      >
         <BarChart3 size={17} className="text-mist-300" />
         Stats
       </button>

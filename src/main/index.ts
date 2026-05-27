@@ -1,6 +1,7 @@
 import { app, BrowserWindow, ipcMain } from 'electron';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
+import { registerIpcHandlers } from './ipc/registerIpcHandlers';
 
 let mainWindow: BrowserWindow | null = null;
 
@@ -48,6 +49,7 @@ function createWindow(): void {
 
 if (gotSingleInstanceLock) {
   app.whenReady().then(() => {
+    registerIpcHandlers();
     createWindow();
 
     app.on('activate', () => {
