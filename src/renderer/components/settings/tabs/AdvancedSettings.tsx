@@ -78,6 +78,16 @@ export function AdvancedSettings({
             />
           }
         />
+        <SettingsRow
+          label="Enable developer reload hotkeys"
+          description="Ctrl+R reloads, Ctrl+Shift+R hard reloads, Ctrl+Alt+R relaunches Electron."
+          control={
+            <SettingsToggle
+              checked={settings.enableDeveloperReloadHotkeys}
+              onChange={(checked) => updateSetting('enableDeveloperReloadHotkeys', checked)}
+            />
+          }
+        />
       </SettingsSection>
     </div>
   );

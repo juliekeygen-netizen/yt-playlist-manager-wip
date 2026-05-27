@@ -18,8 +18,10 @@ import {
 import { AppDialog } from '../components/playlists/AppDialog';
 import { ContextMenu, type ContextMenuState } from '../components/playlists/ContextMenu';
 import { EmptyPlaylistDetailPanel, PlaylistDetailPanel } from '../components/playlists/PlaylistDetailPanel';
+import { ExportPlaylistPopup } from '../components/playlists/ExportPlaylistPopup';
 import { PlaylistListPanel } from '../components/playlists/PlaylistListPanel';
 import { PlaylistPageToolbar } from '../components/playlists/PlaylistPageToolbar';
+import { PlaylistStatsPopup } from '../components/playlists/PlaylistStatsPopup';
 import { TargetPlaylistPicker, type TargetPickerMode } from '../components/playlists/TargetPlaylistPicker';
 import type { SelectionModifiers } from '../components/playlists/VideoTable';
 import { useSettings } from '../contexts/settingsContextValue';
@@ -32,6 +34,8 @@ type DialogState =
   | { type: 'deletePlaylists'; playlistIds: string[] }
   | { type: 'playlistSelectionList'; playlistIds: string[] }
   | { type: 'removeVideos'; videoIds: string[] }
+  | { type: 'playlistStats'; playlistId: string }
+  | { type: 'exportPlaylist'; playlistId: string }
   | { type: 'notImplemented'; title: string; message: string };
 
 export function PlaylistsPage() {
@@ -711,8 +715,8 @@ export function PlaylistsPage() {
               destructive: true,
               onSelect: () => requestDeletePlaylists([playlistId]),
             },
-            { label: 'Export', disabled: true, onSelect: () => showNotImplemented('Export playlist') },
-            { label: 'Stats', disabled: true, onSelect: () => showNotImplemented('Playlist stats') },
+            { label: 'Export', onSelect: () => setDialog({ type: 'exportPlaylist', playlistId }) },
+            { label: 'Stats', onSelect: () => setDialog({ type: 'playlistStats', playlistId }) },
           ],
     });
   }
@@ -895,6 +899,17 @@ export function PlaylistsPage() {
           ]}
           onClose={() => setDialog(null)}
         />
+      );
+    }
+
+    if (dialog.type === 'playlistStats' || dialog.type === 'exportPlaylist') {
+      const playlist = playlistsWithCounts.find((item) => item.id === dialog.playlistId);
+      if (!playlist) return null;
+      const videos = videosByPlaylistId[playlist.id] ?? [];
+      return dialog.type === 'playlistStats' ? (
+        <PlaylistStatsPopup playlist={playlist} videos={videos} onClose={() => setDialog(null)} />
+      ) : (
+        <ExportPlaylistPopup playlist={playlist} onClose={() => setDialog(null)} />
       );
     }
 

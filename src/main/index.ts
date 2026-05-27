@@ -4,6 +4,20 @@ import { join } from 'node:path';
 
 let mainWindow: BrowserWindow | null = null;
 
+const gotSingleInstanceLock = app.requestSingleInstanceLock();
+
+if (!gotSingleInstanceLock) {
+  app.quit();
+}
+
+app.on('second-instance', () => {
+  if (!mainWindow) return;
+  if (mainWindow.isMinimized()) {
+    mainWindow.restore();
+  }
+  mainWindow.focus();
+});
+
 function createWindow(): void {
   mainWindow = new BrowserWindow({
     width: 1580,
@@ -32,15 +46,17 @@ function createWindow(): void {
   }
 }
 
-app.whenReady().then(() => {
-  createWindow();
+if (gotSingleInstanceLock) {
+  app.whenReady().then(() => {
+    createWindow();
 
-  app.on('activate', () => {
-    if (BrowserWindow.getAllWindows().length === 0) {
-      createWindow();
-    }
+    app.on('activate', () => {
+      if (BrowserWindow.getAllWindows().length === 0) {
+        createWindow();
+      }
+    });
   });
-});
+}
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
@@ -69,6 +85,24 @@ ipcMain.handle('window:close', (event) => {
 });
 
 ipcMain.handle('window:controls-ready', (event) => Boolean(BrowserWindow.fromWebContents(event.sender) ?? mainWindow));
+
+ipcMain.handle('window:reload', (event) => {
+  const window = BrowserWindow.fromWebContents(event.sender) ?? mainWindow;
+  window?.webContents.reload();
+  return Boolean(window);
+});
+
+ipcMain.handle('window:hard-reload', (event) => {
+  const window = BrowserWindow.fromWebContents(event.sender) ?? mainWindow;
+  window?.webContents.reloadIgnoringCache();
+  return Boolean(window);
+});
+
+ipcMain.handle('app:relaunch', () => {
+  app.relaunch();
+  app.exit(0);
+  return true;
+});
 
 function getPreloadPath() {
   const candidates = [

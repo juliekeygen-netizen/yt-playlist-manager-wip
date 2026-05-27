@@ -1,7 +1,13 @@
-import { CircleHelp, Minus, Settings, X } from 'lucide-react';
+import { Info, Minus, Settings, X } from 'lucide-react';
 import type { CSSProperties } from 'react';
 
-export function TitleBar({ onOpenSettings }: { onOpenSettings: () => void }) {
+export function TitleBar({
+  onOpenSettings,
+  onOpenSafetyNote,
+}: {
+  onOpenSettings: () => void;
+  onOpenSafetyNote: () => void;
+}) {
   const noDragStyle = { WebkitAppRegion: 'no-drag', appRegion: 'no-drag' } as CSSProperties & {
     appRegion: string;
   };
@@ -55,15 +61,19 @@ export function TitleBar({ onOpenSettings }: { onOpenSettings: () => void }) {
           Settings
         </button>
         <div className="h-6 w-px bg-white/10" />
-        <button className="flex items-center gap-2 rounded-md px-2.5 py-1.5 text-mist-200 transition hover:bg-white/7 hover:text-white">
-          <CircleHelp size={18} />
-          Help
+        <button
+          className="flex items-center gap-2 rounded-md px-2.5 py-1.5 text-mist-200 transition hover:bg-white/7 hover:text-white"
+          onClick={onOpenSafetyNote}
+          type="button"
+        >
+          <Info size={18} />
+          Info
         </button>
         <div className="no-drag ml-4 flex items-center gap-1 text-mist-400" style={noDragStyle}>
           <button
             aria-label="Minimize window"
             className="no-drag rounded-md p-2 transition hover:bg-white/7 hover:text-white"
-            onClick={() => void runWindowControl('minimize')}
+            onPointerUp={() => void runWindowControl('minimize')}
             onMouseDown={(event) => event.stopPropagation()}
             onPointerDown={(event) => event.stopPropagation()}
             style={noDragStyle}
@@ -74,7 +84,7 @@ export function TitleBar({ onOpenSettings }: { onOpenSettings: () => void }) {
           <button
             aria-label="Close window"
             className="no-drag rounded-md p-2 transition hover:bg-red-500/20 hover:text-red-100"
-            onClick={() => void runWindowControl('close')}
+            onPointerUp={() => void runWindowControl('close')}
             onMouseDown={(event) => event.stopPropagation()}
             onPointerDown={(event) => event.stopPropagation()}
             style={noDragStyle}

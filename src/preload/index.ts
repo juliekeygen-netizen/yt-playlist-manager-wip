@@ -5,4 +5,7 @@ contextBridge.exposeInMainWorld('windowControls', {
   ping: () => ipcRenderer.invoke('window:controls-ready'),
   minimize: () => ipcRenderer.invoke('window:minimize'),
   close: () => ipcRenderer.invoke('window:close'),
+  reload: () => ipcRenderer.invoke('window:reload'),
+  hardReload: () => ipcRenderer.invoke('window:hard-reload'),
+  relaunch: () => ipcRenderer.invoke('app:relaunch'),
 });

@@ -1,5 +1,5 @@
 import type { CSSProperties } from 'react';
-import type { ChildOverlayVisualSettings, OverlayVisualSettings } from '@shared/settings';
+import type { ChildOverlayVisualSettings, OverlayVisualSettings, PopupVisualSettings } from '@shared/settings';
 
 export function buildOverlayBackdropStyle(visuals: OverlayVisualSettings): CSSProperties {
   return {
@@ -48,6 +48,27 @@ export function buildChildModalStyle(visuals: ChildOverlayVisualSettings): CSSPr
       `0 0 ${42 + 8 * shadowStrength}px rgba(59,130,246,${0.13 * shadowStrength})`,
     ].join(','),
     transform: `scale(${visuals.childModalScale})`,
+    backdropFilter: 'blur(16px)',
+  };
+}
+
+export function buildPopupBackdropStyle(visuals: PopupVisualSettings): CSSProperties {
+  return {
+    backgroundColor: `rgba(7, 16, 28, ${visuals.popupBackdropOpacity})`,
+    backdropFilter: `blur(${visuals.popupBackdropBlurPx}px)`,
+  };
+}
+
+export function buildPopupModalStyle(visuals: PopupVisualSettings): CSSProperties {
+  const shadowStrength = visuals.popupShadowStrength;
+  return {
+    backgroundColor: `rgba(7, 20, 33, ${visuals.popupOpacity})`,
+    borderColor: `rgba(255,255,255,${visuals.popupBorderBrightness})`,
+    boxShadow: [
+      `0 ${18 + 5 * shadowStrength}px ${58 + 14 * shadowStrength}px rgba(0,0,0,${0.62 * shadowStrength})`,
+      `0 0 ${32 + 8 * shadowStrength}px rgba(59,130,246,${0.12 * shadowStrength})`,
+    ].join(','),
+    transform: `scale(${visuals.popupScale})`,
     backdropFilter: 'blur(16px)',
   };
 }

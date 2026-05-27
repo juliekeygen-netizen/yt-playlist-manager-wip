@@ -3,12 +3,14 @@ import { useEffect, useMemo, type CSSProperties } from 'react';
 import {
   defaultChildOverlayVisuals,
   defaultOverlayVisuals,
+  defaultPopupVisuals,
   type ChildOverlayVisualSettings,
   type OverlayVisualSettings,
+  type PopupVisualSettings,
 } from '@shared/settings';
 import { useSettings } from '../../contexts/settingsContextValue';
 
-export type OverlayTuningKind = 'main' | 'child';
+export type OverlayTuningKind = 'main' | 'child' | 'popup';
 
 export interface OverlayTuningPanelState {
   kind: OverlayTuningKind;
@@ -25,7 +27,8 @@ export function OverlayTuningPanel({
 }) {
   const { settings, updateSetting } = useSettings();
   const isChild = panel.kind === 'child';
-  const values = isChild ? settings.childOverlayVisuals : settings.overlayVisuals;
+  const isPopup = panel.kind === 'popup';
+  const values = isChild ? settings.childOverlayVisuals : isPopup ? settings.popupVisuals : settings.overlayVisuals;
   const panelStyle = useMemo<CSSProperties>(
     () => ({
       left: Math.min(panel.x, window.innerWidth - 330),
@@ -53,6 +56,10 @@ export function OverlayTuningPanel({
     updateSetting('childOverlayVisuals', { ...settings.childOverlayVisuals, [key]: value });
   }
 
+  function updatePopup<Key extends keyof PopupVisualSettings>(key: Key, value: PopupVisualSettings[Key]) {
+    updateSetting('popupVisuals', { ...settings.popupVisuals, [key]: value });
+  }
+
   async function copyValues() {
     const text = JSON.stringify(values, null, 2);
     try {
@@ -78,10 +85,10 @@ export function OverlayTuningPanel({
         <div className="mb-3 flex items-start justify-between gap-3">
           <div>
             <h3 className="text-sm font-bold uppercase tracking-[0.08em] text-blue-100">
-              {isChild ? 'Child Window Tuning' : 'Overlay Tuning'}
+              {isChild ? 'Child Window Tuning' : isPopup ? 'Popup Tuning' : 'Overlay Tuning'}
             </h3>
             <p className="mt-1 text-xs leading-5 text-mist-500">
-              {isChild ? 'Manage Session child modals' : 'Settings and Manage Session'}
+              {isChild ? 'Manage Session child modals' : isPopup ? 'Confirmations, stats, exports' : 'Settings, Manage Session, Safety note'}
             </p>
           </div>
           <button
@@ -104,6 +111,15 @@ export function OverlayTuningPanel({
               <TuningSlider label="Child modal border brightness" min={0.04} max={0.42} step={0.01} value={settings.childOverlayVisuals.childModalBorderBrightness} onChange={(value) => updateChild('childModalBorderBrightness', value)} />
               <TuningSlider label="Child modal scale" min={0.95} max={1.05} step={0.005} value={settings.childOverlayVisuals.childModalScale} onChange={(value) => updateChild('childModalScale', value)} />
             </>
+          ) : isPopup ? (
+            <>
+              <TuningSlider label="Popup backdrop opacity" min={0} max={0.75} step={0.01} value={settings.popupVisuals.popupBackdropOpacity} onChange={(value) => updatePopup('popupBackdropOpacity', value)} />
+              <TuningSlider label="Popup backdrop blur" min={0} max={16} step={1} suffix="px" value={settings.popupVisuals.popupBackdropBlurPx} onChange={(value) => updatePopup('popupBackdropBlurPx', value)} />
+              <TuningSlider label="Popup opacity" min={0.65} max={1} step={0.01} value={settings.popupVisuals.popupOpacity} onChange={(value) => updatePopup('popupOpacity', value)} />
+              <TuningSlider label="Popup shadow strength" min={0} max={2.5} step={0.05} value={settings.popupVisuals.popupShadowStrength} onChange={(value) => updatePopup('popupShadowStrength', value)} />
+              <TuningSlider label="Popup border brightness" min={0.04} max={0.42} step={0.01} value={settings.popupVisuals.popupBorderBrightness} onChange={(value) => updatePopup('popupBorderBrightness', value)} />
+              <TuningSlider label="Popup scale" min={0.95} max={1.05} step={0.005} value={settings.popupVisuals.popupScale} onChange={(value) => updatePopup('popupScale', value)} />
+            </>
           ) : (
             <>
               <TuningSlider label="Background opacity" min={0.25} max={0.9} step={0.01} value={settings.overlayVisuals.backgroundOpacity} onChange={(value) => updateMain('backgroundOpacity', value)} />
@@ -118,8 +134,8 @@ export function OverlayTuningPanel({
         </div>
 
         <div className="mt-4 flex flex-wrap justify-end gap-2">
-          <button className="rounded-md border border-white/[0.10] bg-white/[0.045] px-3 py-2 text-xs font-semibold text-mist-200 transition hover:bg-white/[0.08]" onClick={() => updateSetting(isChild ? 'childOverlayVisuals' : 'overlayVisuals', isChild ? defaultChildOverlayVisuals : defaultOverlayVisuals)} type="button">
-            {isChild ? 'Reset child defaults' : 'Reset overlay defaults'}
+          <button className="rounded-md border border-white/[0.10] bg-white/[0.045] px-3 py-2 text-xs font-semibold text-mist-200 transition hover:bg-white/[0.08]" onClick={() => updateSetting(isChild ? 'childOverlayVisuals' : isPopup ? 'popupVisuals' : 'overlayVisuals', isChild ? defaultChildOverlayVisuals : isPopup ? defaultPopupVisuals : defaultOverlayVisuals)} type="button">
+            {isChild ? 'Reset child defaults' : isPopup ? 'Reset popup defaults' : 'Reset overlay defaults'}
           </button>
           <button className="rounded-md border border-white/[0.10] bg-white/[0.045] px-3 py-2 text-xs font-semibold text-mist-200 transition hover:bg-white/[0.08]" onClick={copyValues} type="button">
             Copy values

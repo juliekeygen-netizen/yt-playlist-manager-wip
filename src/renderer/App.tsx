@@ -11,6 +11,7 @@ import {
 import { Sidebar } from './components/Sidebar';
 import { ManageYouTubeSessionOverlay } from './components/session/ManageYouTubeSessionOverlay';
 import { SettingsOverlay } from './components/settings/SettingsOverlay';
+import { SafetyNoteOverlay } from './components/SafetyNoteOverlay';
 import { TitleBar } from './components/TitleBar';
 import { SettingsProvider } from './contexts/SettingsContext';
 import { useSettings } from './contexts/settingsContextValue';
@@ -32,6 +33,8 @@ function AppShell() {
   const [activePage, setActivePage] = useState<AppPage>('home');
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [sessionOpen, setSessionOpen] = useState(false);
+  const [sessionImportOpen, setSessionImportOpen] = useState(false);
+  const [safetyNoteOpen, setSafetyNoteOpen] = useState(false);
   const [session, setSession] = useState<MockSessionInfo>(() => loadStoredSession());
 
   useEffect(() => {
@@ -42,9 +45,26 @@ function AppShell() {
     }
   }, [session]);
 
+  useEffect(() => {
+    function handleDeveloperReload(event: KeyboardEvent) {
+      if (!settings.enableDeveloperReloadHotkeys || !event.ctrlKey || event.key.toLowerCase() !== 'r') return;
+      event.preventDefault();
+      if (event.altKey) {
+        void window.windowControls?.relaunch?.();
+      } else if (event.shiftKey) {
+        void window.windowControls?.hardReload?.();
+      } else {
+        void window.windowControls?.reload?.();
+      }
+    }
+
+    window.addEventListener('keydown', handleDeveloperReload);
+    return () => window.removeEventListener('keydown', handleDeveloperReload);
+  }, [settings.enableDeveloperReloadHotkeys]);
+
   return (
     <div className="flex h-full flex-col overflow-hidden rounded-lg border border-slate-700/70 bg-shell-900/80 text-mist-100 shadow-panel">
-      <TitleBar onOpenSettings={() => setSettingsOpen(true)} />
+      <TitleBar onOpenSettings={() => setSettingsOpen(true)} onOpenSafetyNote={() => setSafetyNoteOpen(true)} />
       <div className="flex min-h-0 flex-1">
         <Sidebar
           activePage={activePage}
@@ -59,6 +79,12 @@ function AppShell() {
               previewFirstTime={settings.previewFirstTimeHomeUi}
               onOpenPlaylists={() => setActivePage('playlists')}
               onOpenSessionManager={() => setSessionOpen(true)}
+              onOpenImportSession={() => {
+                setSessionOpen(true);
+                setSessionImportOpen(true);
+              }}
+              onOpenSafetyNote={() => setSafetyNoteOpen(true)}
+              onOpenQueue={() => setActivePage('queue')}
             />
           )}
           {activePage === 'playlists' && <PlaylistsPage />}
@@ -70,7 +96,11 @@ function AppShell() {
       {sessionOpen && (
         <ManageYouTubeSessionOverlay
           session={session}
-          onClose={() => setSessionOpen(false)}
+          initialChildModal={sessionImportOpen ? { type: 'cookies', mode: 'import' } : null}
+          onClose={() => {
+            setSessionOpen(false);
+            setSessionImportOpen(false);
+          }}
           onRefreshSession={() =>
             setSession((current) =>
               current.state === 'connected'
@@ -91,6 +121,7 @@ function AppShell() {
           onUseSession={(nextSession) => setSession(nextSession)}
         />
       )}
+      {safetyNoteOpen && <SafetyNoteOverlay onClose={() => setSafetyNoteOpen(false)} />}
     </div>
   );
 }

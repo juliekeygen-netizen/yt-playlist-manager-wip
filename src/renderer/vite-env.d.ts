@@ -6,5 +6,8 @@ interface Window {
     ping: () => Promise<boolean>;
     minimize: () => Promise<boolean>;
     close: () => Promise<boolean>;
+    reload: () => Promise<boolean>;
+    hardReload: () => Promise<boolean>;
+    relaunch: () => Promise<boolean>;
   };
 }

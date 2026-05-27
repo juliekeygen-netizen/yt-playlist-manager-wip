@@ -1,5 +1,8 @@
 import { X } from 'lucide-react';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { useSettings } from '../../contexts/settingsContextValue';
+import { buildPopupBackdropStyle, buildPopupModalStyle } from '../../utils/overlayVisualStyles';
+import { OverlayTuningPanel, type OverlayTuningPanelState } from '../settings/OverlayTuningPanel';
 
 export type DialogActionVariant = 'primary' | 'danger' | 'secondary';
 
@@ -31,27 +34,40 @@ export function AppDialog({
   onClose: () => void;
   onSubmit?: () => void;
 }) {
+  const { settings } = useSettings();
+  const [tuningPanel, setTuningPanel] = useState<OverlayTuningPanelState | null>(null);
+
   useEffect(() => {
     function closeOnEscape(event: KeyboardEvent) {
-      if (event.key === 'Escape') {
+      if (event.key === 'Escape' && tuningPanel) {
+        setTuningPanel(null);
+      } else if (event.key === 'Escape') {
         onClose();
       }
     }
 
     document.addEventListener('keydown', closeOnEscape);
     return () => document.removeEventListener('keydown', closeOnEscape);
-  }, [onClose]);
+  }, [onClose, tuningPanel]);
 
   return (
-    <div className="fixed inset-0 z-[120] flex items-center justify-center bg-shell-950/35 px-5 backdrop-blur-sm">
+    <div className="fixed inset-0 z-[120] flex items-center justify-center px-5" style={buildPopupBackdropStyle(settings.popupVisuals)}>
       <form
-        className="w-full max-w-[440px] rounded-xl border border-white/[0.10] bg-shell-900/94 p-5 shadow-glow backdrop-blur-xl"
+        className="w-full max-w-[440px] rounded-xl border p-5"
+        style={buildPopupModalStyle(settings.popupVisuals)}
         onSubmit={(event) => {
           event.preventDefault();
           onSubmit?.();
         }}
       >
-        <div className="flex items-start gap-4">
+        <div
+          className="flex items-start gap-4"
+          onContextMenu={(event) => {
+            if (!settings.enableOverlayVisualTuning) return;
+            event.preventDefault();
+            setTuningPanel({ kind: 'popup', x: event.clientX, y: event.clientY });
+          }}
+        >
           <div className="min-w-0 flex-1">
             <h2 className="text-lg font-semibold text-mist-50">{title}</h2>
             {description && <p className="mt-2 whitespace-pre-line text-sm leading-6 text-mist-400">{description}</p>}
@@ -93,6 +109,7 @@ export function AppDialog({
           ))}
         </div>
       </form>
+      {tuningPanel && <OverlayTuningPanel panel={tuningPanel} onClose={() => setTuningPanel(null)} />}
     </div>
   );
 }

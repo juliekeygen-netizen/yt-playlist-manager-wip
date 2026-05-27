@@ -1,4 +1,4 @@
-import { Copy, FolderInput, Trash2, Upload, X } from 'lucide-react';
+import { Copy, FolderInput, Trash2, X } from 'lucide-react';
 
 export function SelectionActionBar({
   selectedCount,
@@ -61,13 +61,6 @@ export function SelectionActionBar({
       >
         <Trash2 size={17} />
         Remove
-      </button>
-      <button
-        className={`flex h-full items-center gap-2 px-4 transition hover:bg-white/[0.06] hover:text-white ${disabledActionClass}`}
-        disabled
-      >
-        <Upload size={17} />
-        Export selected
       </button>
       <button
         className={`ml-auto flex h-full items-center gap-2 px-4 transition hover:bg-white/[0.06] hover:text-white ${disabledActionClass}`}

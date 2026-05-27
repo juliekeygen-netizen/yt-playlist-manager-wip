@@ -84,19 +84,21 @@ const savedSessions: SavedSession[] = [
 
 export function ManageYouTubeSessionOverlay({
   session,
+  initialChildModal,
   onClose,
   onRefreshSession,
   onRemoveSession,
   onUseSession,
 }: {
   session: MockSessionInfo;
+  initialChildModal?: SessionChildModal | null;
   onClose: () => void;
   onRefreshSession: () => void;
   onRemoveSession: () => void;
   onUseSession: (session: MockSessionInfo) => void;
 }) {
   const connected = session.state === 'connected';
-  const [childModal, setChildModal] = useState<SessionChildModal | null>(null);
+  const [childModal, setChildModal] = useState<SessionChildModal | null>(initialChildModal ?? null);
   const [tuningPanel, setTuningPanel] = useState<OverlayTuningPanelState | null>(null);
   const { settings } = useSettings();
 
@@ -166,7 +168,7 @@ export function ManageYouTubeSessionOverlay({
       >
         <div className="pointer-events-none absolute inset-0" style={buildOverlayGlowStyle(settings.overlayVisuals)} />
         <section
-          className={`relative z-10 flex h-[min(690px,calc(100vh-56px))] w-[min(820px,calc(100vw-56px))] flex-col overflow-hidden rounded-xl border transition ${
+          className={`relative z-10 flex h-[min(720px,calc(100vh-56px))] w-[min(820px,calc(100vw-56px))] flex-col overflow-hidden rounded-xl border transition ${
             childModal ? 'pointer-events-none' : ''
           }`}
           style={{

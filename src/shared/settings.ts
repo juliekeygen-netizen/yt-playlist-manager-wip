@@ -28,6 +28,15 @@ export interface ChildOverlayVisualSettings {
   childModalScale: number;
 }
 
+export interface PopupVisualSettings {
+  popupBackdropOpacity: number;
+  popupBackdropBlurPx: number;
+  popupOpacity: number;
+  popupShadowStrength: number;
+  popupBorderBrightness: number;
+  popupScale: number;
+}
+
 export interface AppSettings {
   openLastTabOnLaunch: boolean;
   restoreLastPlaylistOnLaunch: boolean;
@@ -58,8 +67,10 @@ export interface AppSettings {
   previewFirstTimeHomeUi: boolean;
   enableMockDataMode: boolean;
   enableOverlayVisualTuning: boolean;
+  enableDeveloperReloadHotkeys: boolean;
   overlayVisuals: OverlayVisualSettings;
   childOverlayVisuals: ChildOverlayVisualSettings;
+  popupVisuals: PopupVisualSettings;
 }
 
 export const defaultOverlayVisuals: OverlayVisualSettings = {
@@ -79,6 +90,15 @@ export const defaultChildOverlayVisuals: ChildOverlayVisualSettings = {
   childModalShadowStrength: 1,
   childModalBorderBrightness: 0.18,
   childModalScale: 1,
+};
+
+export const defaultPopupVisuals: PopupVisualSettings = {
+  popupBackdropOpacity: 0.35,
+  popupBackdropBlurPx: 4,
+  popupOpacity: 0.96,
+  popupShadowStrength: 1,
+  popupBorderBrightness: 0.14,
+  popupScale: 1,
 };
 
 export const defaultSettings: AppSettings = {
@@ -111,8 +131,10 @@ export const defaultSettings: AppSettings = {
   previewFirstTimeHomeUi: false,
   enableMockDataMode: true,
   enableOverlayVisualTuning: false,
+  enableDeveloperReloadHotkeys: true,
   overlayVisuals: defaultOverlayVisuals,
   childOverlayVisuals: defaultChildOverlayVisuals,
+  popupVisuals: defaultPopupVisuals,
 };
 
 export const settingsStorageKey = 'yt-playlist-manager.settings.v1';
@@ -182,6 +204,7 @@ export function sanitizeSettings(rawSettings: unknown): AppSettings {
   next.backupRetention = pickAllowed(raw.backupRetention, backupRetentionValues, defaultSettings.backupRetention);
   next.overlayVisuals = sanitizeOverlayVisuals(raw.overlayVisuals);
   next.childOverlayVisuals = sanitizeChildOverlayVisuals(raw.childOverlayVisuals);
+  next.popupVisuals = sanitizePopupVisuals(raw.popupVisuals);
 
   return next;
 }
@@ -204,6 +227,7 @@ const booleanSettingKeys = [
   'previewFirstTimeHomeUi',
   'enableMockDataMode',
   'enableOverlayVisualTuning',
+  'enableDeveloperReloadHotkeys',
 ] satisfies Array<keyof AppSettings>;
 
 function pickAllowed<T extends string | number>(value: unknown, allowed: readonly T[], fallback: T): T {
@@ -242,6 +266,18 @@ function sanitizeChildOverlayVisuals(value: unknown): ChildOverlayVisualSettings
       0.42,
     ),
     childModalScale: pickNumber(raw.childModalScale, defaultChildOverlayVisuals.childModalScale, 0.95, 1.05),
+  };
+}
+
+function sanitizePopupVisuals(value: unknown): PopupVisualSettings {
+  const raw = value && typeof value === 'object' ? (value as Partial<Record<keyof PopupVisualSettings, unknown>>) : {};
+  return {
+    popupBackdropOpacity: pickNumber(raw.popupBackdropOpacity, defaultPopupVisuals.popupBackdropOpacity, 0, 0.75),
+    popupBackdropBlurPx: pickNumber(raw.popupBackdropBlurPx, defaultPopupVisuals.popupBackdropBlurPx, 0, 16),
+    popupOpacity: pickNumber(raw.popupOpacity, defaultPopupVisuals.popupOpacity, 0.65, 1),
+    popupShadowStrength: pickNumber(raw.popupShadowStrength, defaultPopupVisuals.popupShadowStrength, 0, 2.5),
+    popupBorderBrightness: pickNumber(raw.popupBorderBrightness, defaultPopupVisuals.popupBorderBrightness, 0.04, 0.42),
+    popupScale: pickNumber(raw.popupScale, defaultPopupVisuals.popupScale, 0.95, 1.05),
   };
 }
 
