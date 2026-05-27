@@ -43,6 +43,7 @@ const ytpmApi: YtpmApi = {
   },
   storage: {
     getAppPaths: () => ipcRenderer.invoke(ipcChannels.storage.getAppPaths),
+    chooseExportPath: (request) => ipcRenderer.invoke(ipcChannels.storage.chooseExportPath, request),
     openFolder: (path) => ipcRenderer.invoke(ipcChannels.storage.openFolder, path),
   },
 };

@@ -1,23 +1,29 @@
 import { homeActions, mockHomeState } from '@shared/mockData';
-import type { MockSessionInfo } from '@shared/sessionMockData';
-import { playlistRecords } from '@shared/playlistMockData';
+import type { PlaylistListRecord } from '@shared/playlistMockData';
 import { queueOperations } from '@shared/queueMockData';
+import type { MockSessionInfo } from '@shared/sessionMockData';
 import { QuickActionCard } from '../components/QuickActionCard';
 import { RecentActivity } from '../components/RecentActivity';
 import { RecentPlaylists } from '../components/RecentPlaylists';
 
 export function Dashboard({
+  recentPlaylists,
   session,
   previewFirstTime,
   onOpenPlaylists,
+  onOpenPlaylist,
+  onOpenPlaylistContextAction,
   onOpenSessionManager,
   onOpenImportSession,
   onOpenSafetyNote,
   onOpenQueue,
 }: {
+  recentPlaylists: PlaylistListRecord[];
   session: MockSessionInfo;
   previewFirstTime: boolean;
   onOpenPlaylists?: () => void;
+  onOpenPlaylist: (playlistId: string) => void;
+  onOpenPlaylistContextAction: (playlistId: string, action: 'open' | 'stats' | 'export') => void;
   onOpenSessionManager: () => void;
   onOpenImportSession: () => void;
   onOpenSafetyNote: () => void;
@@ -47,7 +53,12 @@ export function Dashboard({
         ))}
       </section>
 
-      <RecentPlaylists playlists={playlistRecords.slice(0, 3)} onViewAll={onOpenPlaylists} />
+      <RecentPlaylists
+        playlists={recentPlaylists}
+        onOpenPlaylist={onOpenPlaylist}
+        onOpenPlaylistContextAction={onOpenPlaylistContextAction}
+        onViewAll={onOpenPlaylists}
+      />
       <RecentActivity activities={queueOperations.slice(0, 3)} onViewAll={onOpenQueue} />
     </div>
   );

@@ -1,5 +1,5 @@
 import { Download, FolderOpen, ListMusic } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { PlaylistViewRecord } from '@shared/playlistMockData';
 import { PopupModalFrame } from '../modals/PopupModalFrame';
 
@@ -11,6 +11,28 @@ export function ExportPlaylistPopup({
   onClose: () => void;
 }) {
   const [path, setPath] = useState(`C:\\Users\\Julie\\Documents\\Playlists\\${playlist.title}.json`);
+  const [browsePending, setBrowsePending] = useState(false);
+
+  useEffect(() => {
+    setPath(`C:\\Users\\Julie\\Documents\\Playlists\\${playlist.title}.json`);
+  }, [playlist.title]);
+
+  async function chooseExportPath() {
+    if (!window.ytpm?.storage.chooseExportPath) return;
+
+    setBrowsePending(true);
+    try {
+      const result = await window.ytpm.storage.chooseExportPath({
+        defaultFileName: `${playlist.title}.json`,
+        defaultPath: path,
+      });
+      if (result.ok && result.data.filePath) {
+        setPath(result.data.filePath);
+      }
+    } finally {
+      setBrowsePending(false);
+    }
+  }
 
   return (
     <PopupModalFrame
@@ -47,9 +69,14 @@ export function ExportPlaylistPopup({
             value={path}
             onChange={(event) => setPath(event.target.value)}
           />
-          <button className="flex h-12 items-center gap-2 rounded-lg border border-white/[0.10] bg-white/[0.045] px-4 font-semibold text-mist-100 transition hover:bg-white/[0.08]" type="button">
+          <button
+            className="flex h-12 items-center gap-2 rounded-lg border border-white/[0.10] bg-white/[0.045] px-4 font-semibold text-mist-100 transition hover:bg-white/[0.08] disabled:cursor-wait disabled:opacity-70"
+            disabled={browsePending}
+            onClick={() => void chooseExportPath()}
+            type="button"
+          >
             <FolderOpen size={18} />
-            Browse
+            {browsePending ? 'Opening…' : 'Browse'}
           </button>
         </div>
       </label>

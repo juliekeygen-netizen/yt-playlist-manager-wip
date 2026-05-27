@@ -1,13 +1,10 @@
 import { useEffect, useMemo, useState, type Dispatch, type SetStateAction } from 'react';
 import {
   initiallySelectedVideoIds,
-  type PlaylistListRecord,
   type PlaylistSortKey,
   type PlaylistStatusFilter,
   type PlaylistVideo,
   type PlaylistViewRecord,
-  playlistRecords,
-  playlistVideosByPlaylistId,
   type RowsPerPage,
   selectedPlaylistId,
   type SortDirection,
@@ -18,13 +15,12 @@ import {
 import { AppDialog } from '../components/playlists/AppDialog';
 import { ContextMenu, type ContextMenuState } from '../components/playlists/ContextMenu';
 import { EmptyPlaylistDetailPanel, PlaylistDetailPanel } from '../components/playlists/PlaylistDetailPanel';
-import { ExportPlaylistPopup } from '../components/playlists/ExportPlaylistPopup';
 import { PlaylistListPanel } from '../components/playlists/PlaylistListPanel';
 import { PlaylistPageToolbar } from '../components/playlists/PlaylistPageToolbar';
-import { PlaylistStatsPopup } from '../components/playlists/PlaylistStatsPopup';
 import { TargetPlaylistPicker, type TargetPickerMode } from '../components/playlists/TargetPlaylistPicker';
 import type { SelectionModifiers } from '../components/playlists/VideoTable';
 import { useSettings } from '../contexts/settingsContextValue';
+import { usePlaylistMockData } from '../contexts/playlistMockDataContextValue';
 
 type WorkspaceMode = 'videos' | TargetPickerMode | 'removeConfirm';
 type ActiveListScope = 'none' | 'playlistList' | 'videoTable' | TargetPickerMode;
@@ -34,19 +30,22 @@ type DialogState =
   | { type: 'deletePlaylists'; playlistIds: string[] }
   | { type: 'playlistSelectionList'; playlistIds: string[] }
   | { type: 'removeVideos'; videoIds: string[] }
-  | { type: 'playlistStats'; playlistId: string }
-  | { type: 'exportPlaylist'; playlistId: string }
   | { type: 'notImplemented'; title: string; message: string };
 
 export function PlaylistsPage() {
   const { settings } = useSettings();
-  const [playlistRows, setPlaylistRows] = useState<PlaylistListRecord[]>(() => playlistRecords);
-  const [activePlaylistId, setActivePlaylistId] = useState(selectedPlaylistId);
-  const [videosByPlaylistId, setVideosByPlaylistId] = useState<Record<string, PlaylistVideo[]>>(
-    () => playlistVideosByPlaylistId,
-  );
+  const {
+    activePlaylistId,
+    openExportPlaylist,
+    openPlaylistStats,
+    playlistRows,
+    setActivePlaylistId,
+    setPlaylistRows,
+    setVideosByPlaylistId,
+    videosByPlaylistId,
+  } = usePlaylistMockData();
   const [selectedVideoIds, setSelectedVideoIds] = useState<string[]>(initiallySelectedVideoIds);
-  const [selectedPlaylistIds, setSelectedPlaylistIds] = useState<string[]>([selectedPlaylistId]);
+  const [selectedPlaylistIds, setSelectedPlaylistIds] = useState<string[]>([activePlaylistId || selectedPlaylistId]);
   const [workspaceMode, setWorkspaceMode] = useState<WorkspaceMode>('videos');
   const [playlistSearch, setPlaylistSearch] = useState('');
   const [playlistStatusFilter, setPlaylistStatusFilter] = useState<PlaylistStatusFilter>('All statuses');
@@ -77,7 +76,7 @@ export function PlaylistsPage() {
   const [manualVideoOrderByPlaylistId, setManualVideoOrderByPlaylistId] = useState<Record<string, string[]>>(
     () =>
       Object.fromEntries(
-        Object.entries(playlistVideosByPlaylistId).map(([playlistId, videos]) => [
+        Object.entries(videosByPlaylistId).map(([playlistId, videos]) => [
           playlistId,
           videos.map((video) => video.id),
         ]),
@@ -172,7 +171,16 @@ export function PlaylistsPage() {
       setSelectedVideoIds([]);
       setPage(1);
     }
-  }, [activePlaylistId, visiblePlaylists]);
+  }, [activePlaylistId, setActivePlaylistId, visiblePlaylists]);
+
+  useEffect(() => {
+    if (activePlaylistId && !selectedPlaylistIds.includes(activePlaylistId)) {
+      setSelectedPlaylistIds([activePlaylistId]);
+      setPlaylistSelectionAnchorId(activePlaylistId);
+      setSelectedVideoIds([]);
+      setPage(1);
+    }
+  }, [activePlaylistId, selectedPlaylistIds]);
 
   useEffect(() => {
     if (page > totalPages) {
@@ -715,8 +723,8 @@ export function PlaylistsPage() {
               destructive: true,
               onSelect: () => requestDeletePlaylists([playlistId]),
             },
-            { label: 'Export', onSelect: () => setDialog({ type: 'exportPlaylist', playlistId }) },
-            { label: 'Stats', onSelect: () => setDialog({ type: 'playlistStats', playlistId }) },
+            { label: 'Export', onSelect: () => openExportPlaylist(playlistId) },
+            { label: 'Stats', onSelect: () => openPlaylistStats(playlistId) },
           ],
     });
   }
@@ -902,17 +910,6 @@ export function PlaylistsPage() {
       );
     }
 
-    if (dialog.type === 'playlistStats' || dialog.type === 'exportPlaylist') {
-      const playlist = playlistsWithCounts.find((item) => item.id === dialog.playlistId);
-      if (!playlist) return null;
-      const videos = videosByPlaylistId[playlist.id] ?? [];
-      return dialog.type === 'playlistStats' ? (
-        <PlaylistStatsPopup playlist={playlist} videos={videos} onClose={() => setDialog(null)} />
-      ) : (
-        <ExportPlaylistPopup playlist={playlist} onClose={() => setDialog(null)} />
-      );
-    }
-
     return (
       <AppDialog
         title={dialog.title}
@@ -1008,8 +1005,8 @@ export function PlaylistsPage() {
             onSelectVideo={selectVideoWithModifiers}
             onOpenVideoContextMenu={openVideoContextMenu}
             onOpenPlaylistContextMenu={openPlaylistContextMenu}
-            onOpenExportPlaylist={() => setDialog({ type: 'exportPlaylist', playlistId: selectedPlaylist.id })}
-            onOpenPlaylistStats={() => setDialog({ type: 'playlistStats', playlistId: selectedPlaylist.id })}
+            onOpenExportPlaylist={() => openExportPlaylist(selectedPlaylist.id)}
+            onOpenPlaylistStats={() => openPlaylistStats(selectedPlaylist.id)}
             onToggleAllFiltered={toggleAllFilteredVideos}
             onRowsPerPageChange={updateRowsPerPage}
             onPreviousPage={() => setPage((current) => Math.max(1, current - 1))}

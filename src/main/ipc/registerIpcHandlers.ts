@@ -1,6 +1,7 @@
 import { ipcMain } from 'electron';
 import { ipcChannels } from '../../shared/ipc';
 import type {
+  ChooseExportPathRequest,
   HistoryRestoreRequest,
   OperationIdRequest,
   QueueAddRequest,
@@ -47,5 +48,8 @@ export function registerIpcHandlers() {
   ipcMain.handle(ipcChannels.history.exportBackup, () => backupService.exportBackup());
 
   ipcMain.handle(ipcChannels.storage.getAppPaths, () => storageService.ensureAppFolders());
+  ipcMain.handle(ipcChannels.storage.chooseExportPath, (_event, request: ChooseExportPathRequest) =>
+    storageService.chooseExportPath(request),
+  );
   ipcMain.handle(ipcChannels.storage.openFolder, () => storageService.openFolder());
 }

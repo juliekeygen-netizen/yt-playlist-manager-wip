@@ -13,11 +13,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   const [activeSettingsTab, setActiveSettingsTab] = useState<SettingsTabId>('general');
 
   useEffect(() => {
-    try {
-      localStorage.setItem(settingsStorageKey, JSON.stringify(settings));
-    } catch (error) {
-      console.warn('Unable to persist settings to localStorage.', error);
-    }
+    saveStoredSettings(settings);
   }, [settings]);
 
   const value = useMemo<SettingsContextValue>(
@@ -25,10 +21,10 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
       settings,
       activeSettingsTab,
       updateSetting: (key, nextValue) => {
-        setSettings((current) => ({ ...current, [key]: nextValue }));
+        setSettings((current) => sanitizeSettings({ ...current, [key]: nextValue }));
       },
       setActiveSettingsTab,
-      resetSettings: () => setSettings(defaultSettings),
+      resetSettings: () => setSettings(sanitizeSettings(defaultSettings)),
     }),
     [activeSettingsTab, settings],
   );
@@ -43,5 +39,13 @@ function loadStoredSettings(): AppSettings {
   } catch (error) {
     console.warn('Unable to load stored settings; using defaults.', error);
     return defaultSettings;
+  }
+}
+
+function saveStoredSettings(settings: AppSettings) {
+  try {
+    localStorage.setItem(settingsStorageKey, JSON.stringify(sanitizeSettings(settings)));
+  } catch (error) {
+    console.warn('Unable to persist settings to localStorage.', error);
   }
 }

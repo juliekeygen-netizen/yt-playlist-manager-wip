@@ -4,9 +4,11 @@ import { SettingsToggle } from '../SettingsToggle';
 
 export function AdvancedSettings({
   onNotImplemented,
+  onResetMockData,
   onResetSettings,
 }: {
   onNotImplemented: (title: string) => void;
+  onResetMockData: () => void;
   onResetSettings: () => void;
 }) {
   const { settings, updateSetting } = useSettings();
@@ -44,7 +46,13 @@ export function AdvancedSettings({
         />
         <SettingsRow
           label="Reset mock data"
-          control={<SettingsButton danger onClick={onResetSettings}>Reset mock data</SettingsButton>}
+          description="Resets mock playlist and session UI state without wiping your app settings."
+          control={<SettingsButton danger onClick={onResetMockData}>Reset mock data</SettingsButton>}
+        />
+        <SettingsRow
+          label="Reset all settings"
+          description="Restores Settings values, visual tuning, and developer preferences to defaults."
+          control={<SettingsButton danger onClick={onResetSettings}>Reset settings</SettingsButton>}
         />
         <SettingsRow
           label="Clear cache"

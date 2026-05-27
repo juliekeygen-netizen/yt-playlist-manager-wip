@@ -42,6 +42,7 @@ export const ipcChannels = {
   },
   storage: {
     getAppPaths: 'storage:getAppPaths',
+    chooseExportPath: 'storage:chooseExportPath',
     openFolder: 'storage:openFolder',
   },
 } as const;
@@ -74,6 +75,11 @@ export interface PlaylistVideosRequest {
 export interface PlaylistExportRequest {
   playlistId: string;
   outputPath?: string;
+}
+
+export interface ChooseExportPathRequest {
+  defaultFileName: string;
+  defaultPath?: string;
 }
 
 export interface QueueAddRequest {
@@ -129,6 +135,7 @@ export interface YtpmApi {
   };
   storage: {
     getAppPaths: () => Promise<AppResult<AppPaths>>;
+    chooseExportPath: (request: ChooseExportPathRequest) => Promise<AppResult<{ filePath: string | null }>>;
     openFolder: (path: string) => Promise<AppResult<null>>;
   };
 }

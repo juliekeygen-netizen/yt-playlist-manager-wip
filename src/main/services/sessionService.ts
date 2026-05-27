@@ -1,5 +1,6 @@
 import type { AppResult, SessionMetadata } from '../../shared/appTypes';
 import type { SavedSessionSummary } from '../../shared/ipc';
+import { StorageService } from './storageService';
 
 const connectedMetadata: SessionMetadata = {
   hasActiveSession: true,
@@ -32,6 +33,7 @@ const noSessionMetadata: SessionMetadata = {
 
 export class SessionService {
   private metadata = connectedMetadata;
+  private readonly storageService = new StorageService();
 
   getMetadata(): AppResult<SessionMetadata> {
     return { ok: true, data: this.metadata };
@@ -93,5 +95,10 @@ export class SessionService {
       lastRefreshed: 'Just now',
     };
     return { ok: true, data: this.metadata };
+  }
+
+  getSessionMetadataPath(): AppResult<string> {
+    // TODO: Persist real session metadata and encrypted/raw cookie material only from the main process.
+    return this.storageService.getSessionMetadataFilePath();
   }
 }

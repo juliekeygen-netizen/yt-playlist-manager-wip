@@ -107,6 +107,7 @@ export interface SessionMetadata {
 
 export interface AppPaths {
   appDataRoot: string;
+  settingsDir: string;
   sessionsDir: string;
   backupsDir: string;
   exportsDir: string;

@@ -13,9 +13,16 @@ import { SafetyBackupsSettings } from './tabs/SafetyBackupsSettings';
 
 type OverlayDialog =
   | { type: 'message'; title: string; description: string }
+  | { type: 'resetMockData' }
   | { type: 'resetSettings' };
 
-export function SettingsOverlay({ onClose }: { onClose: () => void }) {
+export function SettingsOverlay({
+  onClose,
+  onResetMockData,
+}: {
+  onClose: () => void;
+  onResetMockData: () => void;
+}) {
   const [dialog, setDialog] = useState<OverlayDialog | null>(null);
   const [tuningPanel, setTuningPanel] = useState<OverlayTuningPanelState | null>(null);
   const { activeSettingsTab, resetSettings, setActiveSettingsTab, settings } = useSettings();
@@ -90,6 +97,7 @@ export function SettingsOverlay({ onClose }: { onClose: () => void }) {
             {activeSettingsTab === 'advanced' && (
               <AdvancedSettings
                 onNotImplemented={showNotImplemented}
+                onResetMockData={() => setDialog({ type: 'resetMockData' })}
                 onResetSettings={() => setDialog({ type: 'resetSettings' })}
               />
             )}
@@ -110,10 +118,16 @@ export function SettingsOverlay({ onClose }: { onClose: () => void }) {
             <div className="flex items-start justify-between gap-4">
               <div>
                 <h3 className="text-lg font-semibold text-mist-50">
-                  {dialog.type === 'resetSettings' ? 'Reset settings?' : dialog.title}
+                  {dialog.type === 'resetMockData'
+                    ? 'Reset mock data?'
+                    : dialog.type === 'resetSettings'
+                      ? 'Reset settings?'
+                      : dialog.title}
                 </h3>
                 <p className="mt-2 text-sm leading-6 text-mist-400">
-                  {dialog.type === 'resetSettings'
+                  {dialog.type === 'resetMockData'
+                    ? 'This resets mock playlist and session state back to the default UI data. Your Settings values and visual tuning are preserved.'
+                    : dialog.type === 'resetSettings'
                     ? 'This resets the in-memory Settings panel values to their defaults. Mock playlist, queue, and history data are not reset yet.'
                     : dialog.description}
                 </p>
@@ -129,7 +143,7 @@ export function SettingsOverlay({ onClose }: { onClose: () => void }) {
             </div>
 
             <div className="mt-6 flex justify-end gap-3">
-              {dialog.type === 'resetSettings' ? (
+              {dialog.type === 'resetMockData' || dialog.type === 'resetSettings' ? (
                 <>
                   <button
                     className="rounded-md border border-white/[0.10] bg-white/[0.04] px-4 py-2 text-sm text-mist-200 transition hover:bg-white/[0.08]"
@@ -141,12 +155,16 @@ export function SettingsOverlay({ onClose }: { onClose: () => void }) {
                   <button
                     className="rounded-md bg-red-500/90 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-400"
                     onClick={() => {
-                      resetSettings();
+                      if (dialog.type === 'resetMockData') {
+                        onResetMockData();
+                      } else {
+                        resetSettings();
+                      }
                       setDialog(null);
                     }}
                     type="button"
                   >
-                    Reset settings
+                    {dialog.type === 'resetMockData' ? 'Reset mock data' : 'Reset settings'}
                   </button>
                 </>
               ) : (
