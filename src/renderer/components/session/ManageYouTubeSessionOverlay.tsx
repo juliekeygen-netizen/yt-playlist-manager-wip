@@ -20,6 +20,15 @@ import type { LucideIcon } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import type { ChangeEvent, DragEvent, ReactNode } from 'react';
 import { createMockSessionTimestamps, type MockSessionInfo } from '@shared/sessionMockData';
+import { useSettings } from '../../contexts/settingsContextValue';
+import { OverlayTuningPanel, type OverlayTuningPanelState } from '../settings/OverlayTuningPanel';
+import {
+  buildChildModalStyle,
+  buildChildParentStyle,
+  buildOverlayBackdropStyle,
+  buildOverlayGlowStyle,
+  buildOverlayModalStyle,
+} from '../../utils/overlayVisualStyles';
 
 type CookieMode = 'update' | 'import';
 type CookieSource = 'file' | 'paste';
@@ -88,11 +97,15 @@ export function ManageYouTubeSessionOverlay({
 }) {
   const connected = session.state === 'connected';
   const [childModal, setChildModal] = useState<SessionChildModal | null>(null);
+  const [tuningPanel, setTuningPanel] = useState<OverlayTuningPanelState | null>(null);
+  const { settings } = useSettings();
 
   useEffect(() => {
     function closeOnEscape(event: KeyboardEvent) {
       if (event.key !== 'Escape') return;
-      if (childModal) {
+      if (tuningPanel) {
+        setTuningPanel(null);
+      } else if (childModal) {
         setChildModal(null);
       } else {
         onClose();
@@ -101,7 +114,7 @@ export function ManageYouTubeSessionOverlay({
 
     document.addEventListener('keydown', closeOnEscape);
     return () => document.removeEventListener('keydown', closeOnEscape);
-  }, [childModal, onClose]);
+  }, [childModal, onClose, tuningPanel]);
 
   function completeMockImport() {
     onUseSession({
@@ -147,17 +160,29 @@ export function ManageYouTubeSessionOverlay({
   return (
     <>
       <div
-        className="fixed inset-0 z-[90] flex items-center justify-center bg-[#071523]/62 px-5 py-7 backdrop-blur-[10px]"
+        className="fixed inset-0 z-[90] flex items-center justify-center px-5 py-7"
+        style={buildOverlayBackdropStyle(settings.overlayVisuals)}
         onMouseDown={onClose}
       >
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_42%,rgba(96,165,250,0.014),transparent_60rem),radial-gradient(circle_at_42%_58%,rgba(20,184,166,0.010),transparent_56rem),radial-gradient(circle_at_58%_62%,rgba(244,114,182,0.006),transparent_52rem)]" />
+        <div className="pointer-events-none absolute inset-0" style={buildOverlayGlowStyle(settings.overlayVisuals)} />
         <section
-          className={`relative z-10 flex h-[min(690px,calc(100vh-56px))] w-[min(820px,calc(100vw-56px))] flex-col overflow-hidden rounded-xl border border-white/[0.18] bg-[#071421]/96 shadow-[0_10px_24px_rgba(0,0,0,0.50)] backdrop-blur-md transition ${
-            childModal ? 'pointer-events-none scale-[0.995] opacity-80 blur-[1px]' : ''
+          className={`relative z-10 flex h-[min(690px,calc(100vh-56px))] w-[min(820px,calc(100vw-56px))] flex-col overflow-hidden rounded-xl border transition ${
+            childModal ? 'pointer-events-none' : ''
           }`}
+          style={{
+            ...buildOverlayModalStyle(settings.overlayVisuals),
+            ...(childModal ? buildChildParentStyle(settings.childOverlayVisuals) : {}),
+          }}
           onMouseDown={(event) => event.stopPropagation()}
         >
-          <header className="flex h-[70px] shrink-0 items-center justify-between border-b border-white/[0.08] px-7">
+          <header
+            className="flex h-[70px] shrink-0 items-center justify-between border-b border-white/[0.08] px-7"
+            onContextMenu={(event) => {
+              if (!settings.enableOverlayVisualTuning) return;
+              event.preventDefault();
+              setTuningPanel({ kind: 'main', x: event.clientX, y: event.clientY });
+            }}
+          >
             <div className="flex items-center gap-3">
               <UserRoundCog size={23} className="text-blue-200" />
               <h2 className="text-xl font-bold tracking-[-0.025em] text-mist-50">
@@ -289,8 +314,10 @@ export function ManageYouTubeSessionOverlay({
           onOpenSavedSessions={() => setChildModal({ type: 'savedSessions' })}
           onSwitchToSavedSession={switchToSavedSession}
           onRemoveSession={removeSession}
+          onOpenTuningPanel={(panel) => setTuningPanel(panel)}
         />
       )}
+      {tuningPanel && <OverlayTuningPanel panel={tuningPanel} onClose={() => setTuningPanel(null)} />}
     </>
   );
 }
@@ -307,6 +334,7 @@ function SessionChildModalLayer({
   onOpenSavedSessions,
   onSwitchToSavedSession,
   onRemoveSession,
+  onOpenTuningPanel,
 }: {
   currentSession: MockSessionInfo;
   modal: SessionChildModal;
@@ -319,6 +347,7 @@ function SessionChildModalLayer({
   onOpenSavedSessions: () => void;
   onSwitchToSavedSession: (session: SavedSession) => void;
   onRemoveSession: () => void;
+  onOpenTuningPanel: (panel: OverlayTuningPanelState) => void;
 }) {
   const [selectedSavedSessionId, setSelectedSavedSessionId] = useState(() => {
     const currentEmail = currentSession.email;
@@ -330,6 +359,7 @@ function SessionChildModalLayer({
       <CookieImportModal
         mode={modal.mode}
         onClose={onClose}
+        onOpenTuningPanel={onOpenTuningPanel}
         onCompleteImport={onCompleteImport}
         onOpenPasteCookies={onOpenPasteCookies}
       />
@@ -340,6 +370,7 @@ function SessionChildModalLayer({
     return (
       <PasteCookiesModal
         onClose={onClose}
+        onOpenTuningPanel={onOpenTuningPanel}
         onCompleteImport={onCompleteImport}
       />
     );
@@ -350,6 +381,7 @@ function SessionChildModalLayer({
       <SwitchAccountModal
         connected={currentSession.state === 'connected'}
         onClose={onClose}
+        onOpenTuningPanel={onOpenTuningPanel}
         onOpenCookies={() => onOpenCookies('import')}
         onOpenRemoveSession={onOpenRemoveSession}
         onOpenSavedSessions={onOpenSavedSessions}
@@ -362,6 +394,7 @@ function SessionChildModalLayer({
       <SavedSessionsModal
         selectedSessionId={selectedSavedSessionId}
         onClose={onClose}
+        onOpenTuningPanel={onOpenTuningPanel}
         onConfirmSwitch={(sessionId) => {
           setSelectedSavedSessionId(sessionId);
           onOpenConfirmSwitch(sessionId);
@@ -377,17 +410,18 @@ function SessionChildModalLayer({
       <ConfirmSwitchModal
         targetSession={targetSession}
         onClose={onClose}
+        onOpenTuningPanel={onOpenTuningPanel}
         onSwitch={() => onSwitchToSavedSession(targetSession)}
       />
     );
   }
 
   if (modal.type === 'removeSession') {
-    return <RemoveSessionModal onClose={onClose} onRemoveSession={onRemoveSession} />;
+    return <RemoveSessionModal onClose={onClose} onOpenTuningPanel={onOpenTuningPanel} onRemoveSession={onRemoveSession} />;
   }
 
   return (
-    <ChildModalFrame title={modal.title} maxWidth="max-w-[440px]" onClose={onClose}>
+    <ChildModalFrame title={modal.title} maxWidth="max-w-[440px]" onClose={onClose} onOpenTuningPanel={onOpenTuningPanel}>
       <p className="text-sm leading-6 text-mist-400">{modal.description}</p>
       <div className="mt-6 flex justify-end">
         <ChildButton variant="primary" onClick={onClose}>OK</ChildButton>
@@ -399,11 +433,13 @@ function SessionChildModalLayer({
 function CookieImportModal({
   mode,
   onClose,
+  onOpenTuningPanel,
   onCompleteImport,
   onOpenPasteCookies,
 }: {
   mode: CookieMode;
   onClose: () => void;
+  onOpenTuningPanel: (panel: OverlayTuningPanelState) => void;
   onCompleteImport: () => void;
   onOpenPasteCookies: (mode: CookieMode) => void;
 }) {
@@ -465,6 +501,7 @@ function CookieImportModal({
       subtitle={`Choose how you want to ${verb} your YouTube session cookies.`}
       maxWidth="max-w-[590px]"
       onClose={onClose}
+      onOpenTuningPanel={onOpenTuningPanel}
     >
       <div className="grid grid-cols-2 gap-3">
         <OptionCard
@@ -536,9 +573,11 @@ function CookieImportModal({
 
 function PasteCookiesModal({
   onClose,
+  onOpenTuningPanel,
   onCompleteImport,
 }: {
   onClose: () => void;
+  onOpenTuningPanel: (panel: OverlayTuningPanelState) => void;
   onCompleteImport: () => void;
 }) {
   const [cookiesText, setCookiesText] = useState('');
@@ -559,6 +598,7 @@ function PasteCookiesModal({
       subtitle="Paste your cookies below. Make sure they include youtube.com entries."
       maxWidth="max-w-[540px]"
       onClose={onClose}
+      onOpenTuningPanel={onOpenTuningPanel}
     >
       {operationsRunning && <OperationBlockedWarning />}
       <textarea
@@ -589,12 +629,14 @@ function PasteCookiesModal({
 function SwitchAccountModal({
   connected,
   onClose,
+  onOpenTuningPanel,
   onOpenCookies,
   onOpenRemoveSession,
   onOpenSavedSessions,
 }: {
   connected: boolean;
   onClose: () => void;
+  onOpenTuningPanel: (panel: OverlayTuningPanelState) => void;
   onOpenCookies: () => void;
   onOpenRemoveSession: () => void;
   onOpenSavedSessions: () => void;
@@ -605,6 +647,7 @@ function SwitchAccountModal({
       subtitle="Choose how you want to switch your YouTube account."
       maxWidth="max-w-[560px]"
       onClose={onClose}
+      onOpenTuningPanel={onOpenTuningPanel}
     >
       <div className="space-y-3">
         <LargeActionCard
@@ -639,11 +682,13 @@ function SwitchAccountModal({
 function SavedSessionsModal({
   selectedSessionId,
   onClose,
+  onOpenTuningPanel,
   onConfirmSwitch,
   onSelectSession,
 }: {
   selectedSessionId: string;
   onClose: () => void;
+  onOpenTuningPanel: (panel: OverlayTuningPanelState) => void;
   onConfirmSwitch: (sessionId: string) => void;
   onSelectSession: (sessionId: string) => void;
 }) {
@@ -653,6 +698,7 @@ function SavedSessionsModal({
       subtitle="Select a saved session to switch to."
       maxWidth="max-w-[590px]"
       onClose={onClose}
+      onOpenTuningPanel={onOpenTuningPanel}
     >
       <div className="space-y-3">
         {savedSessions.map((savedSession) => {
@@ -709,14 +755,16 @@ function SavedSessionsModal({
 function ConfirmSwitchModal({
   targetSession,
   onClose,
+  onOpenTuningPanel,
   onSwitch,
 }: {
   targetSession: SavedSession;
   onClose: () => void;
+  onOpenTuningPanel: (panel: OverlayTuningPanelState) => void;
   onSwitch: () => void;
 }) {
   return (
-    <ChildModalFrame title="Confirm switch" maxWidth="max-w-[470px]" onClose={onClose}>
+    <ChildModalFrame title="Confirm switch" maxWidth="max-w-[470px]" onClose={onClose} onOpenTuningPanel={onOpenTuningPanel}>
       <p className="text-sm leading-6 text-mist-400">
         Switch to this account?
         <br />
@@ -736,13 +784,15 @@ function ConfirmSwitchModal({
 
 function RemoveSessionModal({
   onClose,
+  onOpenTuningPanel,
   onRemoveSession,
 }: {
   onClose: () => void;
+  onOpenTuningPanel: (panel: OverlayTuningPanelState) => void;
   onRemoveSession: () => void;
 }) {
   return (
-    <ChildModalFrame title="Remove session" maxWidth="max-w-[460px]" onClose={onClose}>
+    <ChildModalFrame title="Remove session" maxWidth="max-w-[460px]" onClose={onClose} onOpenTuningPanel={onOpenTuningPanel}>
       <h3 className="text-lg font-semibold text-mist-50">Remove this session?</h3>
       <p className="mt-2 text-sm leading-6 text-mist-400">
         {operationsRunning
@@ -766,23 +816,35 @@ function ChildModalFrame({
   maxWidth,
   children,
   onClose,
+  onOpenTuningPanel,
 }: {
   title: string;
   subtitle?: string;
   maxWidth: string;
   children: ReactNode;
   onClose: () => void;
+  onOpenTuningPanel: (panel: OverlayTuningPanelState) => void;
 }) {
+  const { settings } = useSettings();
+
   return (
     <div
       className="fixed inset-0 z-[115] flex items-center justify-center bg-shell-950/38 px-5 backdrop-blur-[2px]"
       onMouseDown={onClose}
     >
       <section
-        className={`w-full ${maxWidth} rounded-xl border border-white/[0.18] bg-[#071421]/98 p-5 shadow-[0_26px_78px_rgba(0,0,0,0.78),0_0_0_1px_rgba(147,197,253,0.08),0_0_46px_rgba(59,130,246,0.16)] backdrop-blur-xl`}
+        className={`w-full ${maxWidth} rounded-xl border p-5`}
+        style={buildChildModalStyle(settings.childOverlayVisuals)}
         onMouseDown={(event) => event.stopPropagation()}
       >
-        <header className="mb-5 flex items-start gap-4">
+        <header
+          className="mb-5 flex items-start gap-4"
+          onContextMenu={(event) => {
+            if (!settings.enableOverlayVisualTuning) return;
+            event.preventDefault();
+            onOpenTuningPanel({ kind: 'child', x: event.clientX, y: event.clientY });
+          }}
+        >
           <div className="min-w-0 flex-1">
             <h2 className="text-lg font-bold tracking-[-0.02em] text-mist-50">{title}</h2>
             {subtitle && <p className="mt-2 text-sm leading-6 text-mist-400">{subtitle}</p>}

@@ -68,6 +68,16 @@ export function AdvancedSettings({
             />
           }
         />
+        <SettingsRow
+          label="Enable overlay visual tuning"
+          description="Developer-only right-click sliders for Settings and session modals."
+          control={
+            <SettingsToggle
+              checked={settings.enableOverlayVisualTuning}
+              onChange={(checked) => updateSetting('enableOverlayVisualTuning', checked)}
+            />
+          }
+        />
       </SettingsSection>
     </div>
   );

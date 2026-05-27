@@ -1,6 +1,8 @@
 import { Settings, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useSettings } from '../../contexts/settingsContextValue';
+import { buildOverlayBackdropStyle, buildOverlayGlowStyle, buildOverlayModalStyle } from '../../utils/overlayVisualStyles';
+import { OverlayTuningPanel, type OverlayTuningPanelState } from './OverlayTuningPanel';
 import { SettingsPanel } from './SettingsPanel';
 import { SettingsSidebar } from './SettingsSidebar';
 import { AboutSettings } from './tabs/AboutSettings';
@@ -15,13 +17,16 @@ type OverlayDialog =
 
 export function SettingsOverlay({ onClose }: { onClose: () => void }) {
   const [dialog, setDialog] = useState<OverlayDialog | null>(null);
-  const { activeSettingsTab, resetSettings, setActiveSettingsTab } = useSettings();
+  const [tuningPanel, setTuningPanel] = useState<OverlayTuningPanelState | null>(null);
+  const { activeSettingsTab, resetSettings, setActiveSettingsTab, settings } = useSettings();
 
   useEffect(() => {
     function closeOnEscape(event: KeyboardEvent) {
       if (event.key === 'Escape') {
         if (dialog) {
           setDialog(null);
+        } else if (tuningPanel) {
+          setTuningPanel(null);
         } else {
           onClose();
         }
@@ -30,7 +35,7 @@ export function SettingsOverlay({ onClose }: { onClose: () => void }) {
 
     document.addEventListener('keydown', closeOnEscape);
     return () => document.removeEventListener('keydown', closeOnEscape);
-  }, [dialog, onClose]);
+  }, [dialog, onClose, tuningPanel]);
 
   function showNotImplemented(title: string) {
     setDialog({
@@ -42,15 +47,24 @@ export function SettingsOverlay({ onClose }: { onClose: () => void }) {
 
   return (
     <div
-      className="fixed inset-0 z-[90] flex items-center justify-center bg-[#071523]/62 px-5 py-7 backdrop-blur-[10px]"
+      className="fixed inset-0 z-[90] flex items-center justify-center px-5 py-7"
+      style={buildOverlayBackdropStyle(settings.overlayVisuals)}
       onMouseDown={onClose}
      >
-<div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_42%,rgba(96,165,250,0.014),transparent_60rem),radial-gradient(circle_at_42%_58%,rgba(20,184,166,0.010),transparent_56rem),radial-gradient(circle_at_58%_62%,rgba(244,114,182,0.006),transparent_52rem)]" />
+<div className="pointer-events-none absolute inset-0" style={buildOverlayGlowStyle(settings.overlayVisuals)} />
       <div
-        className="relative z-10 flex h-[min(760px,calc(100vh-56px))] w-[min(940px,calc(100vw-56px))] flex-col overflow-hidden rounded-xl border border-white/[0.18] bg-[#071421]/96 shadow-[0_10px_24px_rgba(0,0,0,0.50)] backdrop-blur-md"
+        className="relative z-10 flex h-[min(760px,calc(100vh-56px))] w-[min(940px,calc(100vw-56px))] flex-col overflow-hidden rounded-xl border"
+        style={buildOverlayModalStyle(settings.overlayVisuals)}
         onMouseDown={(event) => event.stopPropagation()}
       >
-        <header className="flex h-[70px] shrink-0 items-center justify-between border-b border-white/[0.08] px-7">
+        <header
+          className="flex h-[70px] shrink-0 items-center justify-between border-b border-white/[0.08] px-7"
+          onContextMenu={(event) => {
+            if (!settings.enableOverlayVisualTuning) return;
+            event.preventDefault();
+            setTuningPanel({ kind: 'main', x: event.clientX, y: event.clientY });
+          }}
+        >
           <div className="flex items-center gap-3">
             <Settings size={22} className="text-mist-100" />
             <h2 className="text-xl font-bold tracking-[-0.025em] text-mist-50">Settings</h2>
@@ -148,6 +162,7 @@ export function SettingsOverlay({ onClose }: { onClose: () => void }) {
           </div>
         </div>
       )}
+      {tuningPanel && <OverlayTuningPanel panel={tuningPanel} onClose={() => setTuningPanel(null)} />}
     </div>
   );
 }
