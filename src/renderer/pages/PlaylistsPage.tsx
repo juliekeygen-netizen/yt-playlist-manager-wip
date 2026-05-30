@@ -36,6 +36,9 @@ export function PlaylistsPage() {
   const { settings } = useSettings();
   const {
     activePlaylistId,
+    exportPlaylist,
+    loadRealPlaylists,
+    loadRealPlaylistVideos,
     openExportPlaylist,
     openPlaylistStats,
     playlistRows,
@@ -44,6 +47,7 @@ export function PlaylistsPage() {
     setVideosByPlaylistId,
     videosByPlaylistId,
   } = usePlaylistMockData();
+  const [syncingPlaylists, setSyncingPlaylists] = useState(false);
   const [selectedVideoIds, setSelectedVideoIds] = useState<string[]>(initiallySelectedVideoIds);
   const [selectedPlaylistIds, setSelectedPlaylistIds] = useState<string[]>([activePlaylistId || selectedPlaylistId]);
   const [workspaceMode, setWorkspaceMode] = useState<WorkspaceMode>('videos');
@@ -181,6 +185,16 @@ export function PlaylistsPage() {
       setPage(1);
     }
   }, [activePlaylistId, selectedPlaylistIds]);
+
+  useEffect(() => {
+    if (!selectedPlaylist || selectedPlaylist.source !== 'real') return;
+
+    void loadRealPlaylistVideos(selectedPlaylist.id).then((result) => {
+      if (!result.ok) {
+        console.warn(`Unable to load playlist videos for ${selectedPlaylist.id}: ${result.error}`);
+      }
+    });
+  }, [loadRealPlaylistVideos, selectedPlaylist]);
 
   useEffect(() => {
     if (page > totalPages) {
@@ -392,6 +406,26 @@ export function PlaylistsPage() {
   function updateRowsPerPage(value: RowsPerPage) {
     setRowsPerPage(value);
     setPage(1);
+  }
+
+  async function syncAllPlaylists() {
+    setSyncingPlaylists(true);
+    try {
+      const result = await loadRealPlaylists();
+      if (!result.ok) {
+        setDialog({
+          type: 'notImplemented',
+          title: 'Sync failed',
+          message: result.error,
+        });
+        return;
+      }
+      setSelectedVideoIds([]);
+      setVideoSelectionAnchorId(null);
+      setPage(1);
+    } finally {
+      setSyncingPlaylists(false);
+    }
   }
 
   function openTargetPicker(mode: TargetPickerMode) {
@@ -659,7 +693,8 @@ export function PlaylistsPage() {
 
   function openVideoUrl(videoId: string) {
     const video = selectedVideos.find((item) => item.id === videoId);
-    const url = video?.url ?? `https://www.youtube.com/watch?v=${encodeURIComponent(videoId)}`;
+    const effectiveVideoId = video?.videoId || videoId;
+    const url = video?.url ?? `https://www.youtube.com/watch?v=${encodeURIComponent(effectiveVideoId)}`;
     window.open(url, '_blank', 'noopener,noreferrer');
   }
 
@@ -944,6 +979,8 @@ export function PlaylistsPage() {
           setPage(1);
         }}
         onSortSelect={updatePlaylistSort}
+        onSyncAll={() => void syncAllPlaylists()}
+        syncing={syncingPlaylists}
       />
 
       <div className="grid min-h-0 flex-1 grid-cols-[360px_minmax(0,1fr)] gap-4">

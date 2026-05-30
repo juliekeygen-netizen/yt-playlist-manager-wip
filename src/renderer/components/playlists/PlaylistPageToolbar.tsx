@@ -28,17 +28,21 @@ export function PlaylistPageToolbar({
   statusFilter,
   sortKey,
   sortDirection,
+  syncing,
   onSearchChange,
   onStatusFilterChange,
   onSortSelect,
+  onSyncAll,
 }: {
   search: string;
   statusFilter: PlaylistStatusFilter;
   sortKey: PlaylistSortKey;
   sortDirection: SortDirection;
+  syncing?: boolean;
   onSearchChange: (value: string) => void;
   onStatusFilterChange: (value: PlaylistStatusFilter) => void;
   onSortSelect: (value: PlaylistSortKey) => void;
+  onSyncAll: () => void;
 }) {
   return (
     <section className="flex items-center gap-4">
@@ -66,9 +70,14 @@ export function PlaylistPageToolbar({
         value={sortKey}
         onSelect={onSortSelect}
       />
-      <button className="ml-auto flex h-10 w-[108px] items-center justify-center gap-2 rounded-md bg-gradient-to-r from-blue-500 to-blue-700 text-sm font-semibold text-white shadow-lg shadow-blue-950/30 transition hover:from-blue-400 hover:to-blue-600">
+      <button
+        className="ml-auto flex h-10 w-[108px] items-center justify-center gap-2 rounded-md bg-gradient-to-r from-blue-500 to-blue-700 text-sm font-semibold text-white shadow-lg shadow-blue-950/30 transition hover:from-blue-400 hover:to-blue-600 disabled:cursor-wait disabled:opacity-80"
+        disabled={syncing}
+        onClick={onSyncAll}
+        type="button"
+      >
         <RefreshCw size={17} />
-        Sync all
+        {syncing ? 'Syncing' : 'Sync all'}
       </button>
     </section>
   );

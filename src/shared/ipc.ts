@@ -57,7 +57,8 @@ export interface SavedSessionSummary {
 }
 
 export interface ImportCookiesFileRequest {
-  filePath: string;
+  fileName?: string;
+  cookieText: string;
 }
 
 export interface ImportCookiesTextRequest {

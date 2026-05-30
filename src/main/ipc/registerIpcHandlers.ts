@@ -12,28 +12,30 @@ import { HistoryService } from '../services/historyService';
 import { QueueService } from '../services/queueService';
 import { SessionService } from '../services/sessionService';
 import { StorageService } from '../services/storageService';
+import { YouTubeClient } from '../services/youtubeClient';
 import { YouTubeService } from '../services/youtubeService';
 
 export function registerIpcHandlers() {
-  const sessionService = new SessionService();
-  const youtubeService = new YouTubeService();
   const storageService = new StorageService();
+  const youtubeClient = new YouTubeClient();
+  const sessionService = new SessionService(storageService, youtubeClient);
+  const youtubeService = new YouTubeService(sessionService, storageService, youtubeClient);
   const queueService = new QueueService();
   const historyService = new HistoryService();
   const backupService = new BackupService();
 
   ipcMain.handle(ipcChannels.session.getMetadata, () => sessionService.getMetadata());
-  ipcMain.handle(ipcChannels.session.importCookiesFile, () => sessionService.importCookiesFile());
-  ipcMain.handle(ipcChannels.session.importCookiesText, () => sessionService.importCookiesText());
+  ipcMain.handle(ipcChannels.session.importCookiesFile, (_event, request) => sessionService.importCookiesFile(request));
+  ipcMain.handle(ipcChannels.session.importCookiesText, (_event, request) => sessionService.importCookiesText(request));
   ipcMain.handle(ipcChannels.session.remove, () => sessionService.remove());
   ipcMain.handle(ipcChannels.session.refresh, () => sessionService.refresh());
   ipcMain.handle(ipcChannels.session.listSaved, () => sessionService.listSaved());
   ipcMain.handle(ipcChannels.session.switch, (_event, request: SwitchSessionRequest) => sessionService.switch(request.sessionId));
 
   ipcMain.handle(ipcChannels.playlists.list, () => youtubeService.listPlaylists());
-  ipcMain.handle(ipcChannels.playlists.getVideos, () => youtubeService.getPlaylistVideos());
-  ipcMain.handle(ipcChannels.playlists.refresh, () => youtubeService.listPlaylists());
-  ipcMain.handle(ipcChannels.playlists.export, () => youtubeService.exportPlaylistData());
+  ipcMain.handle(ipcChannels.playlists.getVideos, (_event, request) => youtubeService.getPlaylistVideos(request));
+  ipcMain.handle(ipcChannels.playlists.refresh, (_event, request) => youtubeService.refreshPlaylist(request));
+  ipcMain.handle(ipcChannels.playlists.export, (_event, request) => youtubeService.exportPlaylistData(request));
 
   ipcMain.handle(ipcChannels.queue.list, () => queueService.list());
   ipcMain.handle(ipcChannels.queue.add, (_event, request: QueueAddRequest) => queueService.add(request));

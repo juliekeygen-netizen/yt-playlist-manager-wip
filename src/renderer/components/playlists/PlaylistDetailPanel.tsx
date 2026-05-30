@@ -91,7 +91,7 @@ export function PlaylistDetailPanel({
   return (
     <section className="panel flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-lg">
       <header className="flex shrink-0 items-start gap-5 p-4">
-        <ThumbnailPlaceholder size="lg" />
+        <ThumbnailPlaceholder alt={playlist.title} size="lg" src={playlist.thumbnailUrl} />
         <div className="min-w-0 pt-2">
           <h2 className="truncate text-2xl font-semibold tracking-[-0.025em] text-mist-50">
             {playlist.title}

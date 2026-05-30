@@ -1,7 +1,7 @@
 export type AppResult<T> = { ok: true; data: T } | { ok: false; error: string; code?: string };
 
 export type PlaylistVideoStatus = 'public' | 'unlisted' | 'private' | 'deleted' | 'unavailable';
-export type SessionConnectionStatus = 'connected' | 'notConnected' | 'expired' | 'unknown';
+export type SessionConnectionStatus = 'connected' | 'notConnected' | 'expired' | 'invalid' | 'unknown';
 export type SessionSource = 'importedCookies' | 'savedSession' | 'none';
 
 export interface Playlist {

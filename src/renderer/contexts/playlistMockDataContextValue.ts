@@ -1,4 +1,5 @@
 import { createContext, useContext, type Dispatch, type SetStateAction } from 'react';
+import type { AppResult } from '@shared/appTypes';
 import type { PlaylistListRecord, PlaylistVideo, PlaylistViewRecord } from '@shared/playlistMockData';
 
 export type PlaylistPopupState =
@@ -19,6 +20,9 @@ export interface PlaylistMockDataContextValue {
   closePlaylistPopup: () => void;
   playlistPopup: PlaylistPopupState;
   getPlaylistViewById: (playlistId: string) => PlaylistViewRecord | undefined;
+  loadRealPlaylists: () => Promise<AppResult<PlaylistListRecord[]>>;
+  loadRealPlaylistVideos: (playlistId: string, options?: { force?: boolean }) => Promise<AppResult<PlaylistVideo[]>>;
+  exportPlaylist: (playlistId: string, outputPath?: string) => Promise<AppResult<{ outputPath: string }>>;
   resetMockPlaylistData: () => void;
 }
 

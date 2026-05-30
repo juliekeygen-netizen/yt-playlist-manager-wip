@@ -5,13 +5,17 @@ import { PopupModalFrame } from '../modals/PopupModalFrame';
 
 export function ExportPlaylistPopup({
   playlist,
+  onExport,
   onClose,
 }: {
   playlist: PlaylistViewRecord;
+  onExport?: (outputPath: string) => Promise<void>;
   onClose: () => void;
 }) {
   const [path, setPath] = useState(`C:\\Users\\Julie\\Documents\\Playlists\\${playlist.title}.json`);
   const [browsePending, setBrowsePending] = useState(false);
+  const [exportPending, setExportPending] = useState(false);
+  const [exportError, setExportError] = useState('');
 
   useEffect(() => {
     setPath(`C:\\Users\\Julie\\Documents\\Playlists\\${playlist.title}.json`);
@@ -34,6 +38,24 @@ export function ExportPlaylistPopup({
     }
   }
 
+  async function exportPlaylist() {
+    if (!onExport) {
+      onClose();
+      return;
+    }
+
+    setExportPending(true);
+    setExportError('');
+    try {
+      await onExport(path);
+      onClose();
+    } catch (error) {
+      setExportError(error instanceof Error ? error.message : 'Unable to export playlist.');
+    } finally {
+      setExportPending(false);
+    }
+  }
+
   return (
     <PopupModalFrame
       title="Export playlist"
@@ -45,9 +67,14 @@ export function ExportPlaylistPopup({
           <button className="rounded-lg border border-white/[0.10] bg-white/[0.045] px-5 py-2.5 text-sm font-semibold text-mist-200 transition hover:bg-white/[0.08]" onClick={onClose} type="button">
             Cancel
           </button>
-          <button className="flex items-center gap-2 rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-500" onClick={onClose} type="button">
+          <button
+            className="flex items-center gap-2 rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-500 disabled:cursor-wait disabled:opacity-80"
+            disabled={exportPending}
+            onClick={() => void exportPlaylist()}
+            type="button"
+          >
             <Download size={17} />
-            Export
+            {exportPending ? 'Exporting...' : 'Export'}
           </button>
         </div>
       }
@@ -81,6 +108,7 @@ export function ExportPlaylistPopup({
         </div>
       </label>
       <p className="mt-3 text-sm text-mist-500">Choose where the exported JSON file will be saved.</p>
+      {exportError && <p className="mt-3 text-sm text-red-300">{exportError}</p>}
     </PopupModalFrame>
   );
 }

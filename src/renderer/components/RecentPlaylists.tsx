@@ -36,7 +36,11 @@ export function RecentPlaylists({
             onDoubleClick={() => onOpenPlaylist(playlist.id)}
           >
             <div className="h-[52px] w-[82px] overflow-hidden rounded-md border border-slate-500/20 bg-gradient-to-br from-[#070d16] via-[#0e1a2a] to-[#101d2f] shadow-inner shadow-black/40">
-              <div className="h-full w-full bg-[radial-gradient(circle_at_72%_35%,rgba(148,163,184,0.11),transparent_18%),linear-gradient(135deg,rgba(255,255,255,0.035),transparent_42%)]" />
+              {playlist.thumbnailUrl ? (
+                <img alt={playlist.title} className="h-full w-full object-cover" loading="lazy" src={playlist.thumbnailUrl} />
+              ) : (
+                <div className="h-full w-full bg-[radial-gradient(circle_at_72%_35%,rgba(148,163,184,0.11),transparent_18%),linear-gradient(135deg,rgba(255,255,255,0.035),transparent_42%)]" />
+              )}
             </div>
             <div className="min-w-0">
               <h3 className="truncate text-[16px] font-semibold text-mist-50">{playlist.title}</h3>

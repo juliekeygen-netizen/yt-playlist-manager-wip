@@ -1,11 +1,8 @@
 import { useEffect, useState } from 'react';
 import type { AppPage } from '@shared/navigation';
 import {
-  connectedMockSession,
-  createMockSessionTimestamps,
   emptyMockSession,
-  sanitizeMockSession,
-  sessionStorageKey,
+  mapSessionMetadataToMockSession,
   type MockSessionInfo,
 } from '@shared/sessionMockData';
 import { Sidebar } from './components/Sidebar';
@@ -52,15 +49,22 @@ function AppShell() {
   const [sessionOpen, setSessionOpen] = useState(false);
   const [sessionImportOpen, setSessionImportOpen] = useState(false);
   const [safetyNoteOpen, setSafetyNoteOpen] = useState(false);
-  const [session, setSession] = useState<MockSessionInfo>(() => loadStoredSession());
+  const [session, setSession] = useState<MockSessionInfo>(emptyMockSession);
+  const [sessionLoading, setSessionLoading] = useState(true);
 
   useEffect(() => {
-    try {
-      localStorage.setItem(sessionStorageKey, JSON.stringify(session));
-    } catch (error) {
-      console.warn('Unable to persist mock session metadata to localStorage.', error);
+    if (!window.ytpm?.session.getMetadata) {
+      setSessionLoading(false);
+      return;
     }
-  }, [session]);
+
+    void window.ytpm.session.getMetadata().then((result) => {
+      if (result.ok) {
+        setSession(mapSessionMetadataToMockSession(result.data));
+      }
+      setSessionLoading(false);
+    });
+  }, []);
 
   useEffect(() => {
     function handleDeveloperReload(event: KeyboardEvent) {
@@ -132,7 +136,6 @@ function AppShell() {
         <SettingsOverlay
           onClose={() => setSettingsOpen(false)}
           onResetMockData={() => {
-            setSession(connectedMockSession);
             resetMockPlaylistData();
           }}
         />
@@ -145,23 +148,44 @@ function AppShell() {
             setSessionOpen(false);
             setSessionImportOpen(false);
           }}
-          onRefreshSession={() =>
-            setSession((current) =>
-              current.state === 'connected'
-                ? {
-                    ...current,
-                    connectionStatus: 'Connected',
-                    ...createMockSessionTimestamps(),
-                    health: {
-                      sessionDataLoaded: true,
-                      signInCheckPassed: true,
-                      playlistAccessCheckPassed: true,
-                    },
-                  }
-                : current,
-            )
-          }
-          onRemoveSession={() => setSession(emptyMockSession)}
+          onImportCookiesFile={async ({ cookieText, fileName }) => {
+            if (!window.ytpm?.session.importCookiesFile) {
+              throw new Error('Session import API is unavailable.');
+            }
+            const result = await window.ytpm.session.importCookiesFile({ cookieText, fileName });
+            if (!result.ok) {
+              throw new Error(result.error);
+            }
+            const mapped = mapSessionMetadataToMockSession(result.data);
+            setSession(mapped);
+            return mapped;
+          }}
+          onImportCookiesText={async (cookieText) => {
+            if (!window.ytpm?.session.importCookiesText) {
+              throw new Error('Session import API is unavailable.');
+            }
+            const result = await window.ytpm.session.importCookiesText({ cookieText });
+            if (!result.ok) {
+              throw new Error(result.error);
+            }
+            const mapped = mapSessionMetadataToMockSession(result.data);
+            setSession(mapped);
+            return mapped;
+          }}
+          onRefreshSession={async () => {
+            if (!window.ytpm?.session.refresh) return;
+            const result = await window.ytpm.session.refresh();
+            if (result.ok) {
+              setSession(mapSessionMetadataToMockSession(result.data));
+            }
+          }}
+          onRemoveSession={async () => {
+            if (!window.ytpm?.session.remove) return;
+            const result = await window.ytpm.session.remove();
+            if (result.ok) {
+              setSession(mapSessionMetadataToMockSession(result.data));
+            }
+          }}
           onUseSession={(nextSession) => setSession(nextSession)}
         />
       )}
@@ -178,14 +202,4 @@ function AppShell() {
       })()}
     </div>
   );
-}
-
-function loadStoredSession(): MockSessionInfo {
-  try {
-    const raw = localStorage.getItem(sessionStorageKey);
-    return raw ? sanitizeMockSession(JSON.parse(raw)) : connectedMockSession;
-  } catch (error) {
-    console.warn('Unable to load stored mock session metadata; using defaults.', error);
-    return connectedMockSession;
-  }
 }

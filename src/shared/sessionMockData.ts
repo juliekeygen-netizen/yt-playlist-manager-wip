@@ -1,5 +1,7 @@
+import type { SessionMetadata } from './appTypes';
+
 export type MockSessionState = 'connected' | 'none';
-export type MockConnectionStatus = 'Connected' | 'Not connected';
+export type MockConnectionStatus = 'Connected' | 'Not connected' | 'Expired' | 'Invalid' | 'Unknown';
 export type MockSessionSource = 'Imported cookies' | 'Saved session' | 'None';
 
 export interface MockSessionHealth {
@@ -76,7 +78,14 @@ export function sanitizeMockSession(value: unknown): MockSessionInfo {
     accountName: typeof candidate.accountName === 'string' && candidate.accountName ? candidate.accountName : connectedMockSession.accountName,
     email: typeof candidate.email === 'string' ? candidate.email : connectedMockSession.email,
     initials: typeof candidate.initials === 'string' && candidate.initials ? candidate.initials : connectedMockSession.initials,
-    connectionStatus: candidate.connectionStatus === 'Connected' ? 'Connected' : connectedMockSession.connectionStatus,
+    connectionStatus:
+      candidate.connectionStatus === 'Connected' ||
+      candidate.connectionStatus === 'Not connected' ||
+      candidate.connectionStatus === 'Expired' ||
+      candidate.connectionStatus === 'Invalid' ||
+      candidate.connectionStatus === 'Unknown'
+        ? candidate.connectionStatus
+        : connectedMockSession.connectionStatus,
     sessionSource:
       candidate.sessionSource === 'Imported cookies' || candidate.sessionSource === 'Saved session'
         ? candidate.sessionSource
@@ -100,4 +109,44 @@ export function createMockSessionTimestamps() {
     }).format(new Date())}`,
     lastRefreshed: 'Just now',
   };
+}
+
+export function mapSessionMetadataToMockSession(metadata: SessionMetadata): MockSessionInfo {
+  return {
+    state: metadata.hasActiveSession ? 'connected' : 'none',
+    accountName: metadata.accountName,
+    email: metadata.email,
+    initials: metadata.initials || 'YT',
+    connectionStatus:
+      metadata.connectionStatus === 'connected'
+        ? 'Connected'
+        : metadata.connectionStatus === 'expired'
+          ? 'Expired'
+          : metadata.connectionStatus === 'invalid'
+            ? 'Invalid'
+            : metadata.connectionStatus === 'unknown'
+              ? 'Unknown'
+              : 'Not connected',
+    sessionSource:
+      metadata.sessionSource === 'savedSession'
+        ? 'Saved session'
+        : metadata.sessionSource === 'importedCookies'
+          ? 'Imported cookies'
+          : 'None',
+    lastChecked: metadata.lastChecked ? formatSessionTimestamp(metadata.lastChecked) : '',
+    lastRefreshed: metadata.lastRefreshed ? formatSessionTimestamp(metadata.lastRefreshed) : '',
+    health: metadata.health,
+  };
+}
+
+function formatSessionTimestamp(value: string) {
+  const parsed = Date.parse(value);
+  if (Number.isNaN(parsed)) return value;
+
+  return new Intl.DateTimeFormat(undefined, {
+    month: 'short',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+  }).format(new Date(parsed));
 }

@@ -305,7 +305,7 @@ function VideoRow({
         }}
         type="checkbox"
       />
-      <ThumbnailPlaceholder size="table" />
+      <ThumbnailPlaceholder alt={video.title} size="table" src={video.thumbnailUrl} />
       <span className="clamp-2 min-w-0 pr-4 font-medium leading-5 text-mist-50">{video.title}</span>
       <span className="clamp-2 min-w-0 pr-4 leading-5 text-mist-400">{video.channel}</span>
       <span className="text-mist-300">{video.duration}</span>

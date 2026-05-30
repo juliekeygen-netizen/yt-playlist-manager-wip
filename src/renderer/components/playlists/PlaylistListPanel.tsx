@@ -96,7 +96,7 @@ function PlaylistListItem({
         </>
       )}
       <div className="relative z-10 text-left">
-        <ThumbnailPlaceholder />
+        <ThumbnailPlaceholder alt={playlist.title} src={playlist.thumbnailUrl} />
       </div>
       <div className="relative z-10 min-w-0 self-center text-left">
         <h3 className="flex items-center gap-2 truncate font-semibold text-mist-50">

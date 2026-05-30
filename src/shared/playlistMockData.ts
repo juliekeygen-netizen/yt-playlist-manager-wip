@@ -16,16 +16,24 @@ export interface PlaylistListRecord {
   lastSynced: string;
   locked?: boolean;
   pinned?: boolean;
+  thumbnailUrl?: string;
+  source?: 'mock' | 'real';
 }
 
 export interface PlaylistVideo {
   id: string;
+  playlistId?: string;
+  playlistItemId?: string;
+  videoId?: string;
   title: string;
   channel: string;
+  channelId?: string;
   duration: string;
   status: VideoStatus;
   dateAdded: string;
+  thumbnailUrl?: string;
   url?: string;
+  source?: 'mock' | 'real';
 }
 
 export interface PlaylistViewRecord extends PlaylistListRecord {
